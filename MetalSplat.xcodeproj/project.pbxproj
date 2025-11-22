@@ -413,7 +413,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8CZ5947U2L;
+				DEVELOPMENT_TEAM = C62UQA68UR;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -451,7 +451,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8CZ5947U2L;
+				DEVELOPMENT_TEAM = C62UQA68UR;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -516,7 +516,7 @@
 		};
 		424365322AB503E500C3EF55 /* XCRemoteSwiftPackageReference "Forge" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Hi-Rez/Forge";
+			repositoryURL = "https://github.com/drunknbass/Forge";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.4.2;

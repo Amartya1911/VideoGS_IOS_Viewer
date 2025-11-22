@@ -1,10 +1,10 @@
 {
-  "originHash" : "3df41deb6908960ccd9b52ef6e106603527a4761a191fe392af34680e134b5bd",
+  "originHash" : "773f50d00017654c8b80357cc42eb2d93280cf10122feb7c10deed8bce2c131a",
   "pins" : [
     {
       "identity" : "forge",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Hi-Rez/Forge",
+      "location" : "https://github.com/drunknbass/Forge",
       "state" : {
         "revision" : "700e72f59a807577582194c93e0dcb5aa7d53e5d",
         "version" : "1.4.2"
