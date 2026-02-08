@@ -1,0 +1,4 @@
+// Configuration to fix C++11 narrowing errors in Satin/SatinCore with Xcode 26.2
+// This disables the strict narrowing conversion warnings that fail the build
+
+OTHER_CPLUSPLUSFLAGS = $(inherited) -Wno-c++11-narrowing

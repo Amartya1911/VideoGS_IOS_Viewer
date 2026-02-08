@@ -61,6 +61,7 @@
 		42F4B04A2AB6036400C0D69D /* Metal+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Metal+Extensions.swift"; sourceTree = "<group>"; };
 		42F4B04C2AB604C500C0D69D /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Assets; sourceTree = "<group>"; };
 		42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARSplatView.swift; sourceTree = "<group>"; };
+		7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MetalSplat.xcconfig; sourceTree = "<group>"; };
 		AAA635812BDFD21500B68F05 /* OpencvTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OpencvTest.mm; sourceTree = "<group>"; };
 		AAA635832BDFD24A00B68F05 /* OpencvTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpencvTest.h; sourceTree = "<group>"; };
 		AAA6358A2BE160DE00B68F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -108,6 +109,7 @@
 		42D75A9E2AB24FB500E6BA61 = {
 			isa = PBXGroup;
 			children = (
+				7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */,
 				42D75AA92AB24FB500E6BA61 /* MetalSplat */,
 				42D75AA82AB24FB500E6BA61 /* Products */,
 				421343252AB775F300DDA3A2 /* Frameworks */,
@@ -289,6 +291,7 @@
 /* Begin XCBuildConfiguration section */
 		42D75ABB2AB24FB800E6BA61 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -352,6 +355,7 @@
 		};
 		42D75ABC2AB24FB800E6BA61 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -408,12 +412,13 @@
 		};
 		42D75ABE2AB24FB800E6BA61 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = C62UQA68UR;
+				DEVELOPMENT_TEAM = 723GGSVBTJ;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -435,6 +440,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-c++11-narrowing";
 				PRODUCT_BUNDLE_IDENTIFIER = df.www.dfdfef;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -446,12 +452,13 @@
 		};
 		42D75ABF2AB24FB800E6BA61 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = C62UQA68UR;
+				DEVELOPMENT_TEAM = 723GGSVBTJ;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -473,6 +480,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-c++11-narrowing";
 				PRODUCT_BUNDLE_IDENTIFIER = df.www.dfdfef;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
