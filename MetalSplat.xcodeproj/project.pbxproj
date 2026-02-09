@@ -33,6 +33,9 @@
 		7B40544D2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 in Resources */ = {isa = PBXBuildFile; fileRef = 7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */; };
 		7B40544F2F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */; };
 		7B4054512F39A003005B79C0 /* group_info_4k_actor2_lowres.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */; };
+		A1B2C3D4E5F6A7B8C9D0E1F3 /* 4K_Actor2_Dancing_sh0_res2_qp15 in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* 4K_Actor2_Dancing_sh0_res2_qp15 */; };
+		A1B2C3D4E5F6A7B8C9D0E1F5 /* viewer_min_max_4k_actor2_medres.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F4 /* viewer_min_max_4k_actor2_medres.json */; };
+		A1B2C3D4E5F6A7B8C9D0E1F7 /* group_info_4k_actor2_medres.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F6 /* group_info_4k_actor2_medres.json */; };
 		AAA635822BDFD21500B68F05 /* OpencvTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAA635812BDFD21500B68F05 /* OpencvTest.mm */; };
 		EBB9F1C92BED017E00B402CC /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB9F1C82BED017E00B402CC /* opencv2.framework */; };
 		EBCD32262CF757B80068E604 /* ykx_boxing_long_qp15_380 in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */; };
@@ -68,6 +71,9 @@
 		7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = 4K_Actor2_Dancing_sh0_res4_qp15; sourceTree = "<group>"; };
 		7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = viewer_min_max_4k_actor2_lowres.json; sourceTree = "<group>"; };
 		7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_info_4k_actor2_lowres.json; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* 4K_Actor2_Dancing_sh0_res2_qp15 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = 4K_Actor2_Dancing_sh0_res2_qp15; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F4 /* viewer_min_max_4k_actor2_medres.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = viewer_min_max_4k_actor2_medres.json; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F6 /* group_info_4k_actor2_medres.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_info_4k_actor2_medres.json; sourceTree = "<group>"; };
 		AAA635812BDFD21500B68F05 /* OpencvTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OpencvTest.mm; sourceTree = "<group>"; };
 		AAA635832BDFD24A00B68F05 /* OpencvTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpencvTest.h; sourceTree = "<group>"; };
 		AAA6358A2BE160DE00B68F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -139,6 +145,9 @@
 				7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */,
 				7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */,
 				7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* 4K_Actor2_Dancing_sh0_res2_qp15 */,
+				A1B2C3D4E5F6A7B8C9D0E1F6 /* group_info_4k_actor2_medres.json */,
+				A1B2C3D4E5F6A7B8C9D0E1F4 /* viewer_min_max_4k_actor2_medres.json */,
 				AAA6358A2BE160DE00B68F05 /* Info.plist */,
 				42D75AAA2AB24FB500E6BA61 /* AppDelegate.swift */,
 				42F4B0432AB602A700C0D69D /* MainViewController.swift */,
@@ -252,6 +261,9 @@
 				7B40544D2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 in Resources */,
 				7B4054512F39A003005B79C0 /* group_info_4k_actor2_lowres.json in Resources */,
 				7B40544F2F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json in Resources */,
+				A1B2C3D4E5F6A7B8C9D0E1F3 /* 4K_Actor2_Dancing_sh0_res2_qp15 in Resources */,
+				A1B2C3D4E5F6A7B8C9D0E1F7 /* group_info_4k_actor2_medres.json in Resources */,
+				A1B2C3D4E5F6A7B8C9D0E1F5 /* viewer_min_max_4k_actor2_medres.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

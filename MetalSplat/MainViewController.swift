@@ -25,6 +25,7 @@ struct SplatChoiceView: View {
     @State private var isMicActive = false
     @State private var isMicLowResActive = false
     @State private var isActor2Active = false
+    @State private var isActor2MedResActive = false
     @State private var isLegoActive = false
     @State private var isCoser = false
     @State private var isAddActive = false
@@ -55,7 +56,8 @@ struct SplatChoiceView: View {
                     let imageWidth = (screenWidth - totalSpacing) / CGFloat(columns.count) - rowSpacing
                     let images = [
                         (id: 1, name: "cover2", description: "boxing"),
-                        (id: 2, name: "cover2", description: "4K dancing"),
+                        (id: 2, name: "cover2", description: "dancing low res"),
+                        (id: 3, name: "cover2", description: "dancing medium res"),
                     ]
                     LazyVGrid(columns: columns, spacing: rowSpacing) {
                         ForEach(images, id: \.id) { item in
@@ -86,6 +88,8 @@ struct SplatChoiceView: View {
                                     self.isMicLowResActive = true
                                 case 2:
                                     self.isActor2Active = true
+                                case 3:
+                                    self.isActor2MedResActive = true
                                 default:
                                     break
                                 }
@@ -106,6 +110,9 @@ struct SplatChoiceView: View {
         }
         .fullScreenCover(isPresented: $isActor2Active) {
             SplatSimpleView(model: Models.MicLowRes, index: 2)
+        }
+        .fullScreenCover(isPresented: $isActor2MedResActive) {
+            SplatSimpleView(model: Models.MicLowRes, index: 3)
         }
     }
     func refreshAction() async {

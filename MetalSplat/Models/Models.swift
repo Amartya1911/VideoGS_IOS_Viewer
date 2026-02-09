@@ -81,12 +81,22 @@ struct DatasetConfig {
         initPos: [0.0, -0.6, 0.5]
     )
 
+    static let actor2DancingMedRes = DatasetConfig(
+        minmaxPath: "viewer_min_max_4k_actor2_medres",
+        videoFolder: "4K_Actor2_Dancing_sh0_res2_qp15",
+        groupInfoPath: "group_info_4k_actor2_medres",
+        stopNum: 40,
+        totalFrames: 40,
+        initPos: [0.0, -0.6, 0.5]
+    )
+
     /// Look up dataset config by dataIndex.
     /// To add a new dataset, add a new case here.
     static func config(for dataIndex: Int) -> DatasetConfig {
         switch dataIndex {
         case 1:  return .ykxBoxing
         case 2:  return .actor2Dancing4K
+        case 3:  return .actor2DancingMedRes
         default: return .ykxBoxing
         }
     }
