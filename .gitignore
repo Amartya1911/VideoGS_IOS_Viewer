@@ -43,4 +43,5 @@ Packages/
 .AppleDesktop
 Network Trash Folder
 Temporary Items
-.apdiskbuild_errors.log
+.apdisk
+build_errors.log
