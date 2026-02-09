@@ -53,6 +53,45 @@ struct SplatModelInfo {
     
 }
 
+// MARK: - Dataset Configuration
+// To add a new dataset: 1) Add a static property below  2) Add a case in config(for:)
+struct DatasetConfig {
+    let minmaxPath: String      // JSON filename (without extension)
+    let videoFolder: String     // Video dataset folder name in bundle
+    let groupInfoPath: String   // Group info JSON filename (without extension)
+    let stopNum: Int            // Max buffered frames before pausing load queue
+    let totalFrames: Int        // Total number of frames in dataset
+    let initPos: [Float]        // Initial position [x, y, z]
+
+    static let ykxBoxing = DatasetConfig(
+        minmaxPath: "viewer_min_max_ykx_380",
+        videoFolder: "ykx_boxing_long_qp15_380",
+        groupInfoPath: "group_info_ykx_380",
+        stopNum: 100,
+        totalFrames: 630,
+        initPos: [0.0, -0.6, 0.5]
+    )
+
+    static let actor2Dancing4K = DatasetConfig(
+        minmaxPath: "viewer_min_max_4k_actor2_lowres",
+        videoFolder: "4K_Actor2_Dancing_sh0_res4_qp15",
+        groupInfoPath: "group_info_4k_actor2_lowres",
+        stopNum: 40,
+        totalFrames: 40,
+        initPos: [0.0, -0.6, 0.5]
+    )
+
+    /// Look up dataset config by dataIndex.
+    /// To add a new dataset, add a new case here.
+    static func config(for dataIndex: Int) -> DatasetConfig {
+        switch dataIndex {
+        case 1:  return .ykxBoxing
+        case 2:  return .actor2Dancing4K
+        default: return .ykxBoxing
+        }
+    }
+}
+
 struct Models {
     
     

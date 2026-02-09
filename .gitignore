@@ -2,6 +2,7 @@
 opencv2.framework
 MetalSplat/ykx_boxing_long_qp15_380
 MetalSplat/4K_Actor2_Dancing_qp22
+MetalSplat/4K_Actor2_Dancing_sh0_res4_qp15
 
 # Xcode
 xcuserdata/
@@ -42,4 +43,4 @@ Packages/
 .AppleDesktop
 Network Trash Folder
 Temporary Items
-.apdisk
+.apdiskbuild_errors.log

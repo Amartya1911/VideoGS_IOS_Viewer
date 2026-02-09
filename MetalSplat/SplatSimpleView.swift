@@ -16,13 +16,7 @@ import Satin
 import SatinCore
 
 func loadAndExtractData(from startIndex: Int, to endIndex: Int, dataIndex: Int) -> [[Double]] {
-    var minmaxPath = ""
-    if dataIndex == 1 {
-        minmaxPath = "viewer_min_max_ykx_380"
-    }
-    else {
-        minmaxPath = "viewer_min_max"
-    }
+    let minmaxPath = DatasetConfig.config(for: dataIndex).minmaxPath
     guard let url = Bundle.main.url(forResource: minmaxPath, withExtension: "json") else {
         print("JSON file not found")
         return []
@@ -284,15 +278,7 @@ class VideoProcessor {
     
     func processVideos(groupIndex ind: Int, dataIndex: Int) -> [[UIImage]] {
         var allImages: [[UIImage]] = []
-        var urlpath = ""
-        
-        if dataIndex == 1 {
-            urlpath = "ykx_boxing_long_qp15_380"
-//            urlpath = "0508"
-        }
-        else {
-            urlpath = "coser18_qp0_new"
-        }
+        let urlpath = DatasetConfig.config(for: dataIndex).videoFolder
 
         for i in 0..<17 {
             let frameRate = 25
@@ -480,15 +466,7 @@ class CameraControllerRenderer: Forge.Renderer {
         print("Drawble size; ", mtkView.drawableSize )
         
         renderer.clearColor = MTLClearColorMake(1.0, 1.0, 1.0, 1.0)
-        var group_info_path = ""
-        
-        if self.dataIndex == 1 {
-            group_info_path = "group_info_ykx_380"
-//            group_info_path = "group_info_0508"
-        }
-        else {
-            group_info_path = "group_info"
-        }
+        let group_info_path = DatasetConfig.config(for: self.dataIndex).groupInfoPath
         guard let url = Bundle.main.url(forResource: group_info_path, withExtension: "json") else {
             print("JSON file not found")
             return
@@ -520,12 +498,7 @@ class CameraControllerRenderer: Forge.Renderer {
         }
 //        print(self.groupIndexList)
         
-        if dataIndex == 1 {
-            stopNum = 100
-        }
-        else {
-            stopNum = 220
-        }
+        stopNum = DatasetConfig.config(for: dataIndex).stopNum
         
         self.currentFrameNum = groupIndexList.last!.2 + 1
         self.frameIndexList = Array(repeating: 0, count: self.currentFrameNum)
@@ -754,12 +727,7 @@ struct SplatSimpleView: View {
         }
     }
     func sliderRange(for index: Int) -> Double {
-        switch index {
-        case 1:
-            return 630 * 2
-        default:
-            return 885 * 2
-        }
+        return Double(DatasetConfig.config(for: index).totalFrames * 2)
     }
     
     private func startTimer() {

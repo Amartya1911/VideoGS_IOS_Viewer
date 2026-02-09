@@ -30,6 +30,9 @@
 		42F4B04B2AB6036400C0D69D /* Metal+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B04A2AB6036400C0D69D /* Metal+Extensions.swift */; };
 		42F4B04D2AB604C500C0D69D /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 42F4B04C2AB604C500C0D69D /* Assets */; };
 		42F4B04F2AB60F5300C0D69D /* ARSplatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */; };
+		7B40544D2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 in Resources */ = {isa = PBXBuildFile; fileRef = 7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */; };
+		7B40544F2F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */; };
+		7B4054512F39A003005B79C0 /* group_info_4k_actor2_lowres.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */; };
 		AAA635822BDFD21500B68F05 /* OpencvTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAA635812BDFD21500B68F05 /* OpencvTest.mm */; };
 		EBB9F1C92BED017E00B402CC /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB9F1C82BED017E00B402CC /* opencv2.framework */; };
 		EBCD32262CF757B80068E604 /* ykx_boxing_long_qp15_380 in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */; };
@@ -62,6 +65,9 @@
 		42F4B04C2AB604C500C0D69D /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Assets; sourceTree = "<group>"; };
 		42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARSplatView.swift; sourceTree = "<group>"; };
 		7B40544C2F382961005B79C0 /* MetalSplat.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MetalSplat.xcconfig; sourceTree = "<group>"; };
+		7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = 4K_Actor2_Dancing_sh0_res4_qp15; sourceTree = "<group>"; };
+		7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = viewer_min_max_4k_actor2_lowres.json; sourceTree = "<group>"; };
+		7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_info_4k_actor2_lowres.json; sourceTree = "<group>"; };
 		AAA635812BDFD21500B68F05 /* OpencvTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OpencvTest.mm; sourceTree = "<group>"; };
 		AAA635832BDFD24A00B68F05 /* OpencvTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpencvTest.h; sourceTree = "<group>"; };
 		AAA6358A2BE160DE00B68F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -130,6 +136,9 @@
 				EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */,
 				EBCD32282CF757C80068E604 /* group_info_ykx_380.json */,
 				EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */,
+				7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */,
+				7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */,
+				7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */,
 				AAA6358A2BE160DE00B68F05 /* Info.plist */,
 				42D75AAA2AB24FB500E6BA61 /* AppDelegate.swift */,
 				42F4B0432AB602A700C0D69D /* MainViewController.swift */,
@@ -240,6 +249,9 @@
 				429289BF2AB9097200318B9C /* lego_60k.ply in Resources */,
 				42D75AB52AB24FB500E6BA61 /* Main.storyboard in Resources */,
 				EBCD32292CF757C80068E604 /* viewer_min_max_ykx_380.json in Resources */,
+				7B40544D2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 in Resources */,
+				7B4054512F39A003005B79C0 /* group_info_4k_actor2_lowres.json in Resources */,
+				7B40544F2F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,7 +309,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -361,7 +373,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;

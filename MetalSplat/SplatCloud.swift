@@ -187,16 +187,7 @@ class SplatCloud : Object, Renderable {
             fatalError("Unable to create buffer")
         }
         
-        var init_pos = [Float(1.0), Float(-0.6), Float(0.5)]
-        if dataIndex == 4 {
-            init_pos = [Float(1.0), Float(-0.6), Float(0.5)]
-        }
-        else if dataIndex == 2 {
-            init_pos = [Float(0.0), Float(-0.6), Float(-0.3)]
-        }
-        else {
-            init_pos = [Float(0.0), Float(-0.6), Float(0.5)]
-        }
+        var init_pos = DatasetConfig.config(for: dataIndex).initPos
         let initPosBufferSize = init_pos.count * MemoryLayout<Float>.size
         guard let initPosBuffer = device.makeBuffer(bytes: init_pos, length: initPosBufferSize, options: .storageModeShared) else {
             fatalError("Unable to create buffer")

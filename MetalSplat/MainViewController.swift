@@ -24,6 +24,7 @@ struct CustomRoundedRectangle: Shape {
 struct SplatChoiceView: View {
     @State private var isMicActive = false
     @State private var isMicLowResActive = false
+    @State private var isActor2Active = false
     @State private var isLegoActive = false
     @State private var isCoser = false
     @State private var isAddActive = false
@@ -53,10 +54,11 @@ struct SplatChoiceView: View {
                     let screenWidth = geometry.size.width
                     let imageWidth = (screenWidth - totalSpacing) / CGFloat(columns.count) - rowSpacing
                     let images = [
-                        (name: "cover2", description: "boxing"),
+                        (id: 1, name: "cover2", description: "boxing"),
+                        (id: 2, name: "cover2", description: "4K dancing"),
                     ]
                     LazyVGrid(columns: columns, spacing: rowSpacing) {
-                        ForEach(images, id: \.name) { item in
+                        ForEach(images, id: \.id) { item in
                             VStack(spacing: 0) {
                                 Image(item.name)
                                     .resizable()
@@ -79,9 +81,11 @@ struct SplatChoiceView: View {
                             .shadow(radius: 5)
                             .padding(.bottom, 10)
                             .onTapGesture {
-                                switch item.name {
-                                case "cover2":
+                                switch item.id {
+                                case 1:
                                     self.isMicLowResActive = true
+                                case 2:
+                                    self.isActor2Active = true
                                 default:
                                     break
                                 }
@@ -99,6 +103,9 @@ struct SplatChoiceView: View {
         }
         .fullScreenCover(isPresented: $isMicLowResActive) {
             SplatSimpleView(model: Models.MicLowRes, index: 1)
+        }
+        .fullScreenCover(isPresented: $isActor2Active) {
+            SplatSimpleView(model: Models.MicLowRes, index: 2)
         }
     }
     func refreshAction() async {
