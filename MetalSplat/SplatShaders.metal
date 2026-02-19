@@ -526,3 +526,39 @@ kernel void generateSplats(
     // Store computed splat
     splats[index] = splat;
 }
+
+kernel void packSplatsFromBuffers(
+    const device float *means [[buffer(0)]],
+    const device float *colors [[buffer(1)]],
+    const device float *scales [[buffer(2)]],
+    const device float *quats [[buffer(3)]],
+    const device float *opacities [[buffer(4)]],
+    device Splat *splats [[buffer(5)]],
+    constant uint &count [[buffer(6)]],
+    uint index [[thread_position_in_grid]])
+{
+    if (index >= count) {
+        return;
+    }
+
+    const uint i3 = index * 3;
+    const uint i4 = index * 4;
+
+    float4 center = float4(means[i3 + 0], means[i3 + 1], means[i3 + 2], 1.0);
+
+    // Raw GS channels are typically SH0 coefficients and opacity logits.
+    constexpr float SH_C0 = 0.28209479177387814;
+    float3 rgb = float3(0.5 + SH_C0 * colors[i3 + 0],
+                        0.5 + SH_C0 * colors[i3 + 1],
+                        0.5 + SH_C0 * colors[i3 + 2]);
+    float alpha = 1.0 / (1.0 + exp(-opacities[index]));
+    float4 color = float4(rgb, alpha);
+
+    // Raw scales are often log-scales.
+    float4 scale = float4(exp(scales[i3 + 0]), exp(scales[i3 + 1]), exp(scales[i3 + 2]), 1.0);
+
+    // Fixed single ordering for testing: input treated as [x, y, z, w].
+    float4 quat = float4(quats[i4 + 0], quats[i4 + 1], quats[i4 + 2], quats[i4 + 3]);
+
+    splats[index] = Splat{center, color, scale, quat};
+}

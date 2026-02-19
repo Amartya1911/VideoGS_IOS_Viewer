@@ -161,6 +161,7 @@ class SplatCloud : Object, Renderable {
     private var commandQueue: MTLCommandQueue!
     private var computePipelineState: MTLComputePipelineState!
     private var isSorting = false
+    var shouldSortSplats: Bool = true
     
     private var generateSplatPipelineState: MTLComputePipelineState!
     
@@ -435,6 +436,52 @@ class SplatCloud : Object, Renderable {
 //        self.temp_splats = self.splats
         
     }
+
+    // MARK: Pre-packed Splat Init (for direct .bin loading)
+    init?(model: SplatModelInfo,
+          renderDestination: RenderDestinationProvider,
+          splatBuffer: MTLBuffer,
+          count: Int) throws {
+
+        guard let library = splatBuffer.device.makeDefaultLibrary() else {
+            throw SplatError.deviceCreationFailed
+        }
+
+        self.device = splatBuffer.device
+        self.library = library
+        self.dataIndex = 0
+
+        self.splats = MetalBuffer(device: device,
+                                  buffer: splatBuffer,
+                                  length: splatBuffer.length,
+                                  count: count,
+                                  index: UInt32(1),
+                                  options: MTLResourceOptions.storageModeShared)
+
+        self.temp_splats = MetalBuffer(device: device,
+                                       count: count,
+                                       index: UInt32(1),
+                                       label: "points2",
+                                       options: MTLResourceOptions.storageModeShared)
+
+        self.splat_indices = .init(device: device,
+                                   count: count,
+                                   index: 0,
+                                   label: "indices",
+                                   options: MTLResourceOptions.storageModeShared)
+
+        let _quads: [packed_float2] = [[1, -1], [1, 1], [-1, -1], [-1, 1]]
+        self.quadBuffer = .init(device: device,
+                                array: _quads,
+                                index: 0,
+                                options: MTLResourceOptions.storageModePrivate)
+
+        super.init()
+
+        self.setupShaders(renderDestination)
+        self.setupCompute(renderDestination)
+        self.copySplats()
+    }
     
     required init(from decoder: Decoder) throws {
         fatalError("init(from:) has not been implemented")
@@ -447,6 +494,9 @@ class SplatCloud : Object, Renderable {
     
     
     func sortSplats() {
+        if !shouldSortSplats {
+            return
+        }
         
         if frame_index % 4 == 0 && !isSorting {
             
@@ -480,6 +530,17 @@ class SplatCloud : Object, Renderable {
         
         
         
+    }
+
+    func sortSplatsOnce() {
+        if isSorting {
+            return
+        }
+
+        isSorting = true
+        self.setSplatDepthsComputeShader()
+        self._sortSplatsCpp()
+        isSorting = false
     }
     
     private func _sortSplatsCpp() {
