@@ -39,6 +39,7 @@
 		AAA635822BDFD21500B68F05 /* OpencvTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAA635812BDFD21500B68F05 /* OpencvTest.mm */; };
 		EBB9F1C92BED017E00B402CC /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB9F1C82BED017E00B402CC /* opencv2.framework */; };
 		EBCD32262CF757B80068E604 /* ykx_boxing_long_qp15_380 in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */; };
+		F1A2B3C4D5E6F708192A3B4C /* 4K_Actor2_Dancing_qp22_bin in Resources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */; };
 		EBCD32292CF757C80068E604 /* viewer_min_max_ykx_380.json in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */; };
 		EBCD322A2CF757C80068E604 /* group_info_ykx_380.json in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32282CF757C80068E604 /* group_info_ykx_380.json */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,7 @@
 		AAA6358A2BE160DE00B68F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EBB9F1C82BED017E00B402CC /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ykx_boxing_long_qp15_380; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = 4K_Actor2_Dancing_qp22_bin; sourceTree = "<group>"; };
 		EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = viewer_min_max_ykx_380.json; sourceTree = "<group>"; };
 		EBCD32282CF757C80068E604 /* group_info_ykx_380.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_info_ykx_380.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -139,6 +141,7 @@
 		42D75AA92AB24FB500E6BA61 /* MetalSplat */ = {
 			isa = PBXGroup;
 			children = (
+				F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */,
 				EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */,
 				EBCD32282CF757C80068E604 /* group_info_ykx_380.json */,
 				EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */,
@@ -250,6 +253,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				42F4B04D2AB604C500C0D69D /* Assets in Resources */,
+				F1A2B3C4D5E6F708192A3B4C /* 4K_Actor2_Dancing_qp22_bin in Resources */,
 				4263EA7C2AB8AD90001EE430 /* mic_60k.ply in Resources */,
 				EBCD32262CF757B80068E604 /* ykx_boxing_long_qp15_380 in Resources */,
 				EBCD322A2CF757C80068E604 /* group_info_ykx_380.json in Resources */,
