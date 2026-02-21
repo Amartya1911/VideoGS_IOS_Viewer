@@ -14,6 +14,7 @@
 		4243652D2AB5021500C3EF55 /* Satin in Frameworks */ = {isa = PBXBuildFile; productRef = 4243652C2AB5021500C3EF55 /* Satin */; };
 		4243652F2AB5021500C3EF55 /* SatinCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4243652E2AB5021500C3EF55 /* SatinCore */; };
 		424365312AB502F400C3EF55 /* SplatSimpleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424365302AB502F400C3EF55 /* SplatSimpleView.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F1A3 /* SplatBinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */; };
 		424365342AB503E500C3EF55 /* Forge in Frameworks */ = {isa = PBXBuildFile; productRef = 424365332AB503E500C3EF55 /* Forge */; };
 		424E67752AB495E0007DE614 /* SplatShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 424E67742AB495E0007DE614 /* SplatShaders.metal */; };
 		4263EA7C2AB8AD90001EE430 /* mic_60k.ply in Resources */ = {isa = PBXBuildFile; fileRef = 4263EA7B2AB8AD90001EE430 /* mic_60k.ply */; };
@@ -51,6 +52,7 @@
 		424365282AB4E81100C3EF55 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		424365292AB4E8BC00C3EF55 /* splat_utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = splat_utils.mm; sourceTree = "<group>"; };
 		424365302AB502F400C3EF55 /* SplatSimpleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatSimpleView.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatBinView.swift; sourceTree = "<group>"; };
 		424E67742AB495E0007DE614 /* SplatShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SplatShaders.metal; sourceTree = "<group>"; };
 		4263EA7B2AB8AD90001EE430 /* mic_60k.ply */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mic_60k.ply; sourceTree = "<group>"; };
 		429289BE2AB9097200318B9C /* lego_60k.ply */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego_60k.ply; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				42F4B0432AB602A700C0D69D /* MainViewController.swift */,
 				42D75AC42AB3499500E6BA61 /* SplatCloud.swift */,
 				424365302AB502F400C3EF55 /* SplatSimpleView.swift */,
+				B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */,
 				42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */,
 				424E67742AB495E0007DE614 /* SplatShaders.metal */,
 				42D75AAC2AB24FB500E6BA61 /* ShaderTypes.h */,
@@ -290,6 +293,7 @@
 				42F4B0482AB6030E00C0D69D /* ARBackgroundRenderer.swift in Sources */,
 				42F4B04B2AB6036400C0D69D /* Metal+Extensions.swift in Sources */,
 				424365312AB502F400C3EF55 /* SplatSimpleView.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F1A3 /* SplatBinView.swift in Sources */,
 				42D75AC52AB3499500E6BA61 /* SplatCloud.swift in Sources */,
 				42D75AC32AB3485500E6BA61 /* MetalBuffer.swift in Sources */,
 			);

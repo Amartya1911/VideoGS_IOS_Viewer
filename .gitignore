@@ -46,3 +46,5 @@ Network Trash Folder
 Temporary Items
 .apdisk
 build_errors.log
+
+*.code-workspace

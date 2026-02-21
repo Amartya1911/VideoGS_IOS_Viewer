@@ -526,3 +526,37 @@ kernel void generateSplats(
     // Store computed splat
     splats[index] = splat;
 }
+
+// MARK: - Generate Splats from raw float32 bin data (no dequantization needed)
+kernel void generateSplatsFromBin(
+    device const float* means      [[ buffer(0) ]],   // N×3 flat float32
+    device const float* scales     [[ buffer(1) ]],   // N×3 flat float32 (log space)
+    device const float* quats      [[ buffer(2) ]],   // N×4 flat float32
+    device const float* colors     [[ buffer(3) ]],   // N×3 flat float32 (SH DC coefficients)
+    device const float* opacities  [[ buffer(4) ]],   // N flat float32 (logit space)
+    device Splat* splats           [[ buffer(5) ]],   // output
+    uint index [[thread_position_in_grid]])
+{
+    float SH_C0 = 0.28209479177387814;
+
+    float4 center = float4(means[index*3], means[index*3+1], means[index*3+2], 1.0);
+
+    // Apply sigmoid to raw logit opacity → [0, 1]
+    float opacity_logit = opacities[index];
+    float opacity_activated = 1.0 / (1.0 + exp(-opacity_logit));
+
+    float4 color  = float4(0.5 + SH_C0 * colors[index*3],
+                           0.5 + SH_C0 * co lors[index*3+1],
+                           0.5 + SH_C0 * colors[index*3+2],
+                           opacity_activated);
+
+    // Apply exp to raw log-space scales → linear positive
+    float4 scale  = float4(exp(scales[index*3]), exp(scales[index*3+1]), exp(scales[index*3+2]), 1.0);
+
+    // Normalize quaternion
+    float4 raw_quat = float4(quats[index*4], quats[index*4+1], quats[index*4+2], quats[index*4+3]);
+    float4 quat = normalize(raw_quat);
+
+    Splat splat = {center, color, scale, quat};
+    splats[index] = splat;
+}

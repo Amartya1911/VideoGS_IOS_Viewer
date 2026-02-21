@@ -102,6 +102,27 @@ struct DatasetConfig {
     }
 }
 
+// MARK: - Bin Dataset Configuration (uncompressed float32 .bin files)
+struct BinDatasetConfig {
+    let binFolder: String       // Folder name in bundle containing frame subdirectories
+    let totalFrames: Int        // Total number of frames (subfolders 0, 1, 2, ...)
+    let initPos: [Float]        // Initial position offset [x, y, z]
+    
+    static let actor2DancingBin = BinDatasetConfig(
+        binFolder: "4K_Actor2_Dancing_qp22_bin",
+        totalFrames: 4,
+        initPos: [0.0, 0.0, 0.0]
+    )
+    
+    /// Look up bin dataset config by dataIndex.
+    static func config(for dataIndex: Int) -> BinDatasetConfig {
+        switch dataIndex {
+        case 1:  return .actor2DancingBin
+        default: return .actor2DancingBin
+        }
+    }
+}
+
 struct Models {
     
     

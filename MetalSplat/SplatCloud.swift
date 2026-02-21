@@ -436,6 +436,83 @@ class SplatCloud : Object, Renderable {
         
     }
     
+    // MARK: Bin Init — construct SplatCloud from raw float32 bin buffers on GPU
+    
+    init?(binBuffers: (means: MTLBuffer, scales: MTLBuffer, quats: MTLBuffer,
+                       colors: MTLBuffer, opacities: MTLBuffer),
+          numPoints: Int,
+          renderDestination: RenderDestinationProvider) throws {
+        
+        guard let device = MTLCreateSystemDefaultDevice(),
+              let library = device.makeDefaultLibrary() else {
+            throw SplatError.deviceCreationFailed
+        }
+        
+        self.device = device
+        self.library = library
+        self.dataIndex = 0
+        
+        // Allocate output splat buffers
+        self.splats = MetalBuffer<Splat>(device: device,
+                                        count: numPoints,
+                                        index: UInt32(1),
+                                        label: "points_bin",
+                                        options: .storageModeShared)
+        
+        self.temp_splats = MetalBuffer<Splat>(device: device,
+                                             count: numPoints,
+                                             index: UInt32(1),
+                                             label: "points2_bin",
+                                             options: .storageModeShared)
+        
+        self.splat_indices = MetalBuffer<Int64>(device: device,
+                                               count: numPoints,
+                                               index: 0,
+                                               label: "indices_bin",
+                                               options: .storageModeShared)
+        
+        let _quads: [packed_float2] = [[1, -1], [1, 1], [-1, -1], [-1, 1]]
+        self.quadBuffer = MetalBuffer<packed_float2>(device: device,
+                                                    array: _quads,
+                                                    index: 0,
+                                                    options: .storageModePrivate)
+        
+        super.init()
+        
+        self.setupShaders(renderDestination)
+        self.setupCompute(renderDestination)
+        
+        // Also set up the generateSplatsFromBin pipeline
+        let defaultLibrary = device.makeDefaultLibrary()!
+        let binKernelFunction = defaultLibrary.makeFunction(name: "generateSplatsFromBin")!
+        let binPipelineState = try device.makeComputePipelineState(function: binKernelFunction)
+        
+        // Dispatch the GPU kernel to construct Splat structs from raw bin data
+        guard let commandBuffer = commandQueue.makeCommandBuffer(),
+              let computeEncoder = commandBuffer.makeComputeCommandEncoder() else {
+            return nil
+        }
+        
+        computeEncoder.setComputePipelineState(binPipelineState)
+        computeEncoder.setBuffer(binBuffers.means, offset: 0, index: 0)
+        computeEncoder.setBuffer(binBuffers.scales, offset: 0, index: 1)
+        computeEncoder.setBuffer(binBuffers.quats, offset: 0, index: 2)
+        computeEncoder.setBuffer(binBuffers.colors, offset: 0, index: 3)
+        computeEncoder.setBuffer(binBuffers.opacities, offset: 0, index: 4)
+        computeEncoder.setBuffer(self.splats.buffer, offset: 0, index: 5)
+        
+        let threadsPerGrid = MTLSize(width: numPoints, height: 1, depth: 1)
+        let maxThreads = binPipelineState.maxTotalThreadsPerThreadgroup
+        let threadsPerGroup = MTLSize(width: min(maxThreads, numPoints), height: 1, depth: 1)
+        computeEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerGroup)
+        
+        computeEncoder.endEncoding()
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        
+        self.copySplats()
+    }
+    
     required init(from decoder: Decoder) throws {
         fatalError("init(from:) has not been implemented")
     }

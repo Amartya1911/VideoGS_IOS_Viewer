@@ -19,6 +19,11 @@
 11. [Key Data Structures](#11-key-data-structures)
 12. [Complete Rendering Workflow](#12-complete-rendering-workflow)
 13. [Reproduction Guide](#13-reproduction-guide)
+14. [Connection to Python Compression Pipeline](#14-connection-to-python-compression-pipeline)
+15. [AR Mode (ARSplatView)](#15-ar-mode-arsplatview)
+16. [Legacy PLY Loader (SplatCloudC)](#16-legacy-ply-loader-splatcloudc)
+17. [Utility Components](#17-utility-components)
+18. [Dataset Configurations](#18-dataset-configurations)
 
 ---
 
@@ -1031,17 +1036,469 @@ To reproduce this pipeline from scratch:
 
 ---
 
-## Appendix: File Reference
+## Appendix (Original): File Reference (Superseded by Appendix A)
 
-| File | Purpose |
-|------|---------|
-| `SplatCloud.swift` | Core splat buffer management, GPU pipeline setup |
-| `SplatShaders.metal` | GPU shaders (generateSplats, splat_vertex, splat_fragment, splat_set_depths) |
-| `ShaderTypes.h` | Shared data structures (Splat, Uniforms) |
-| `SplatSimpleView.swift` | SwiftUI view, video loading, playback control |
-| `OpencvTest.mm` | OpenCV video decoding to grayscale images |
-| `splat_utils.mm` | CPU sorting implementation |
-| `Models.swift` | Model configuration (ply path, orientation, scale) |
+*See Appendix A below for the complete, updated file reference.*
+
+---
+
+## 14. Connection to Python Compression Pipeline
+
+This section maps the **exact** relationship between the Python-side compression scripts (in the `VideoGS/compress/` directory) and the iOS viewer's data ingestion.
+
+### 14.1 End-to-End Data Flow
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    PYTHON COMPRESSION SIDE                          │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  train_sequence.py                                                   │
+│    └── Produces PLY files (one per frame, grouped by 20)             │
+│         └── Attributes: [x,y,z, nx,ny,nz, f_dc_0..2,               │
+│              f_rest_0..N, opacity, scale_0..2, rot_0..3]             │
+│                                                                      │
+│  compress_to_png_full_sh.py                                          │
+│    └── Reads PLYs, quantizes, reshapes to 2D images                  │
+│    └── Output: PNGs + viewer_min_max.json + group_info.json          │
+│         ├── Position: uint16 → split into 2×uint8 channels           │
+│         ├── Others: uint8 channels                                   │
+│         └── 20 channels for SH0 (6 pos + 3 normal + 3 dc            │
+│              + 1 opacity + 3 scale + 4 rotation)                     │
+│                                                                      │
+│  compress_png_2_video.py                                             │
+│    └── ffmpeg H.264 encoding per channel                             │
+│    └── Output: 20 MP4 files per group                                │
+│         ├── Position high bytes (1,3,5): QP=0 (lossless)             │
+│         ├── DC/scale/rotation: QP capped at ≤22                      │
+│         └── Others: user-specified QP                                │
+│                                                                      │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │
+                            │  Bundle into iOS app:
+                            │    • 17 of 20 MP4 files per group (skip 6,7,8)
+                            │    • viewer_min_max.json
+                            │    • group_info.json
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                      iOS VIEWER SIDE                                │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  VideoProcessor.processVideos()                                      │
+│    └── Loads 17 MP4 files (skips normals 6.mp4, 7.mp4, 8.mp4)       │
+│    └── OpencvTest.processVideo() → [[UIImage]] (grayscale frames)    │
+│                                                                      │
+│  SplatCloud.__init__()                                               │
+│    └── Creates 17 Metal R8Unorm textures from UIImages               │
+│    └── Dispatches generateSplats compute kernel                      │
+│                                                                      │
+│  generateSplats (Metal kernel)                                       │
+│    └── Reconstructs uint16 position from two uint8 channels          │
+│    └── Dequantizes using minmax buffer                               │
+│    └── Outputs Splat structs → rendering pipeline                    │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### 14.2 Channel Mapping: Python ↔ iOS
+
+The Python compression creates **20 video channels** (for SH degree 0). The iOS viewer loads only **17**, skipping channels 6, 7, 8 (normals, always zero):
+
+| Python Channel | MP4 File | PLY Attribute | iOS `urls[]` Index | Metal Texture Index |
+|---------------|----------|---------------|--------------------|--------------------|
+| 0 | 0.mp4 | x low byte | 0 | `x0` (texture 0) |
+| 1 | 1.mp4 | x high byte | 1 | `x1` (texture 1) |
+| 2 | 2.mp4 | y low byte | 2 | `y0` (texture 2) |
+| 3 | 3.mp4 | y high byte | 3 | `y1` (texture 3) |
+| 4 | 4.mp4 | z low byte | 4 | `z0` (texture 4) |
+| 5 | 5.mp4 | z high byte | 5 | `z1` (texture 5) |
+| 6 | 6.mp4 | normal_x | **SKIPPED** | — |
+| 7 | 7.mp4 | normal_y | **SKIPPED** | — |
+| 8 | 8.mp4 | normal_z | **SKIPPED** | — |
+| 9 | 9.mp4 | f_dc_0 | 6 | `fdc0` (texture 6) |
+| 10 | 10.mp4 | f_dc_1 | 7 | `fdc1` (texture 7) |
+| 11 | 11.mp4 | f_dc_2 | 8 | `fdc2` (texture 8) |
+| 12 | 12.mp4 | opacity | 9 | `opacity` (texture 9) |
+| 13 | 13.mp4 | scale_0 | 10 | `scale0` (texture 10) |
+| 14 | 14.mp4 | scale_1 | 11 | `scale1` (texture 11) |
+| 15 | 15.mp4 | scale_2 | 12 | `scale2` (texture 12) |
+| 16 | 16.mp4 | rot_0 | 13 | `rot0` (texture 13) |
+| 17 | 17.mp4 | rot_1 | 14 | `rot1` (texture 14) |
+| 18 | 18.mp4 | rot_2 | 15 | `rot2` (texture 15) |
+| 19 | 19.mp4 | rot_3 | 16 | `rot3` (texture 16) |
+
+### 14.3 Min/Max Metadata Mapping
+
+**Python** (`compress_to_png_full_sh.py`) writes `viewer_min_max.json` with **34 values** per frame (17 attributes × min,max):
+
+```
+Index: [0  1   2  3   4  5   6  7   8  9   10 11  12 13  14 15  16 17  18 19  20 21  22 23  24 25  26 27  28 29  30 31  32 33]
+Attr:  [x_min x_max y_min y_max z_min z_max nx_min nx_max ny_min ny_max nz_min nz_max fdc0_min fdc0_max fdc1_min fdc1_max fdc2_min fdc2_max op_min op_max s0_min s0_max s1_min s1_max s2_min s2_max r0_min r0_max r1_min r1_max r2_min r2_max r3_min r3_max]
+```
+
+**iOS** (`extractNeededValues()` in `SplatSimpleView.swift`) extracts **28 of 34** values, **skipping normal indices 6–11**:
+
+```swift
+func extractNeededValues(info: [Double]) -> [Double] {
+    var extractedValues = [Double]()
+    extractedValues.append(contentsOf: info[0...5])     // Position: indices 0-5 → minmax[0-5]
+    extractedValues.append(contentsOf: info[12...17])   // DC color: indices 12-17 → minmax[6-11]
+    extractedValues.append(contentsOf: info.suffix(16)) // Op+Scale+Rot: indices 18-33 → minmax[12-27]
+    return extractedValues
+}
+```
+
+The resulting **28-value minmax array** maps to the Metal shader's `minmax` buffer indices as:
+
+| minmax Index | Attribute | Used By |
+|-------------|-----------|---------|
+| 0, 1 | x_min, x_max | Position dequantization |
+| 2, 3 | y_min, y_max | Position dequantization |
+| 4, 5 | z_min, z_max | Position dequantization |
+| 6, 7 | fdc0_min, fdc0_max | Color dequantization |
+| 8, 9 | fdc1_min, fdc1_max | Color dequantization |
+| 10, 11 | fdc2_min, fdc2_max | Color dequantization |
+| 12, 13 | opacity_min, opacity_max | Opacity dequantization |
+| 14, 15 | scale0_min, scale0_max | Scale dequantization |
+| 16, 17 | scale1_min, scale1_max | Scale dequantization |
+| 18, 19 | scale2_min, scale2_max | Scale dequantization |
+| 20, 21 | rot0_min, rot0_max | Quaternion dequantization |
+| 22, 23 | rot1_min, rot1_max | Quaternion dequantization |
+| 24, 25 | rot2_min, rot2_max | Quaternion dequantization |
+| 26, 27 | rot3_min, rot3_max | Quaternion dequantization |
+
+### 14.4 Dequantization Formula Comparison
+
+**Python** (`compress_to_png_full_sh.py` quantization / `decompress_from_png_full_sh.py` dequantization):
+
+```python
+# Quantization (compress side)
+position: uint16 = ((value - min) / (max - min) * 65535).astype(np.uint16)
+others:   uint8  = ((value - min) / (max - min) * 255).astype(np.uint8)
+
+# Dequantization (decompress side)
+position: value = (uint16 / 65535.0) * (max - min) + min
+others:   value = (uint8  / 255.0)  * (max - min) + min
+```
+
+**Metal** (`generateSplats` kernel in `SplatShaders.metal`):
+
+```metal
+// Position: reconstruct uint16 from two R8Unorm textures, then dequantize
+float xVal = float((uint(x1.read(gid).r * 255.0) << 8) + uint(x0.read(gid).r * 255.0));
+xVal = xVal * (minmax[1] - minmax[0]) / 65535.0 + minmax[0] + init_pos[0];
+
+// Others: R8Unorm texture auto-normalizes [0,255]→[0,1], so .r is already value/255
+float f_dc0Val = fdc0.read(gid).r * (minmax[7] - minmax[6]) + minmax[6];
+// Equivalent to: (uint8 / 255.0) * (max - min) + min
+```
+
+**Key difference**: The Metal shader adds `init_pos[i]` to position — a viewer-specific scene placement offset defined per dataset in `Models.swift` (e.g., `[0.0, 0.0, 0.0]` for actor2).
+
+### 14.5 Activation Functions: Training vs. Viewer
+
+During training (`train.py`), opacity and scale are stored in **raw/log space** in the PLY:
+- Opacity: stored as inverse-sigmoid (logit) → compressed as-is → dequantized as-is
+- Scale: stored as log-scale → compressed as-is → dequantized as-is
+
+The **Metal vertex shader** (`splat_vertex`) applies the activations at render time:
+- Scale: `exp()` is applied via `computeCov3D()` → `S[i][i] = mod * scale.xyz` (scale is already exponentiated in `SplatCloudC.mm` for PLY path, but for the video path, the raw log-scale values are used directly and exponentiation happens implicitly in the covariance computation since scale enters as `M = S * R` and `Sigma = M^T * M`)
+- Opacity: the `generateSplats` kernel passes `opacityVal` directly to `color.a` — sigmoid is assumed to be baked in during the Python compression step (applied before quantization)
+
+**Important note about the compression pipeline's treatment of activations:**
+
+In `compress_to_png_full_sh.py`, the PLY attributes are read **as-is** (raw values from training output). The training code (`train.py`) stores:
+- `opacity`: inverse-sigmoid (logit) space
+- `scale`: log space
+- `rotation`: raw quaternion components
+
+These raw values get quantized and encoded. The iOS viewer's `generateSplats` kernel dequantizes them back to the same raw space. The vertex shader then interprets them assuming the scale values are in log space (the `computeCov3D` function uses them directly as scaling factors).
+
+### 14.6 Group Structure Connection
+
+**Python** (`compress_to_png_full_sh.py`) groups frames:
+
+```python
+# Groups of 20 frames each
+group_size = 20
+num_groups = ceil(total_frames / group_size)
+# group_info.json: {"0": {"start": 0, "end": 19}, "1": {"start": 20, "end": 39}, ...}
+```
+
+**iOS** (`CameraControllerRenderer` in `SplatSimpleView.swift`) reads `group_info.json`:
+
+```swift
+// Build groupIndexList: [(groupId, startFrame, endFrame)]
+let groupInfo = loadGroupInfo()  // e.g., [(0, 0, 19), (1, 20, 39), ...]
+
+// Load group 0 synchronously on startup
+processGroup(groupIndexList[0])
+
+// Queue remaining groups in background
+for group in groupIndexList[1...] {
+    operationQueue.addOperation { self.processGroup(group) }
+}
+```
+
+Each `processGroup()` call:
+1. Calls `VideoProcessor.processVideos(groupIndex:)` → decodes 17 MP4 files for that group
+2. For each frame in the group: creates a `SplatCloud` with the decoded textures + per-frame minmax
+3. Appends to the `splatClouds` array for playback
+
+### 14.7 Spatial Ordering (Morton Code)
+
+The Python compression (`compress_to_png_full_sh.py`) applies **Morton (Z-order) sorting** to Gaussians before writing to images. This ensures spatially adjacent splats map to nearby pixels, improving H.264's spatial prediction efficiency.
+
+The legacy PLY loader (`SplatCloudC.mm`) also implements Morton sorting:
+
+```cpp
+// SplatCloudC.mm, lines 183-200
+simd_float3 rel = (p - minn) / (maxx - minn);
+simd_float3 scaled = simd_make_float3(float((1 << 21) - 1) * rel.x, ...);
+int xyz[3] = { (int)round(scaled.x), (int)round(scaled.y), (int)round(scaled.z) };
+
+uint64_t code = 0;
+for (int j = 0; j < 21; j++) {
+    code |= ((uint64_t(xyz[0] & (1 << j))) << (2 * j + 0));
+    code |= ((uint64_t(xyz[1] & (1 << j))) << (2 * j + 1));
+    code |= ((uint64_t(xyz[2] & (1 << j))) << (2 * j + 2));
+}
+```
+
+This 63-bit Morton code interleaves 21 bits per axis, creating a space-filling curve that preserves 3D locality in the 1D ordering.
+
+---
+
+## 15. AR Mode (ARSplatView)
+
+The `ARSplatView` provides an **augmented reality** mode where the volumetric video is rendered on top of the live camera feed using ARKit.
+
+### 15.1 Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                   ARSplatRenderer               │
+├─────────────────────────────────────────────────┤
+│  1. ARSession (ARWorldTrackingConfiguration)     │
+│  2. ARPerspectiveCamera (pose from ARKit)        │
+│  3. ARBackgroundRenderer (camera feed texture)   │
+│  4. Satin.Renderer (splat rendering offscreen)   │
+│  5. PostProcessor (blend splats + camera feed)   │
+└─────────────────────────────────────────────────┘
+```
+
+### 15.2 Rendering Pipeline
+
+Each draw call in `ARSplatRenderer` performs three passes:
+
+1. **Background Pass**: `ARBackgroundRenderer` captures the AR camera feed (YCbCr pixel buffer from `ARFrame`) and renders it into a `backgroundTexture`
+
+2. **Content Pass**: `Satin.Renderer` renders the current `SplatCloud` into a `contentTexture` (offscreen, potentially downsampled by `renderDownsample`)
+
+3. **Compositing Pass**: `PostProcessor` with `BlendMaterial` blends the two textures together using a custom pipeline (alpha-blending splats over the camera feed)
+
+### 15.3 Camera Integration
+
+`ARPerspectiveCamera` extends Satin's `PerspectiveCamera` to pull view and projection matrices from `ARFrame.camera`:
+
+```swift
+// ARPerspectiveCamera.swift
+override func update(_ commandBuffer: MTLCommandBuffer) {
+    viewMatrix = frame.camera.viewMatrix(for: orientation)
+    let arkitProjectionMatrix = frame.camera.projectionMatrix(
+        for: orientation, viewportSize: mtkView.drawableSize, 
+        zNear: CGFloat(near), zFar: CGFloat(far))
+    setProjectionMatrixFromARKit(arkitProjectionMatrix)
+}
+```
+
+### 15.4 Gesture Controls (DragHelper)
+
+- **1-finger pan**: Rotates the splat cloud around Y-axis
+- **2-finger pan**: Translates in the XZ plane
+- **Pinch**: Uniform scale adjustment
+- **Tap**: Triggers a "glow" effect (sets `isDragging` flag for 3 seconds)
+
+---
+
+## 16. Legacy PLY Loader (SplatCloudC)
+
+The `SplatCloudC` class (`SplatCloudC.mm`) provides a direct PLY file loading path, used for static demo models (Mic, Lego) defined in `Models.swift`.
+
+### 16.1 PLY Parsing
+
+Reads binary PLY files with the `RichPoint<D>` struct layout matching the 3DGS training output format:
+
+```cpp
+template<int D>
+struct RichPoint {
+    Pos pos;            // MTLPackedFloat3 (12 bytes)
+    float n[3];         // normals (unused, always 0 for trained models)
+    SHs<D> shs;         // (D+1)^2 * 3 floats (e.g., 48 floats for SH3)
+    float opacity;      // inverse-sigmoid space
+    Scale scale;        // log space (3 floats)
+    Rot rot;            // quaternion (4 floats)
+};
+```
+
+### 16.2 Activation Application
+
+Unlike the video path (where activations may already be baked), the PLY loader applies activations on the CPU:
+
+```cpp
+// Quaternion normalization
+for (int j = 0; j < 4; j++)
+    rot[k].rot[j] = points[i].rot.rot[j] / length;
+
+// Scale exponentiation (log → linear)
+for (int j = 0; j < 3; j++)
+    scales[k].scale[j] = std::exp(points[i].scale.scale[j]);
+
+// Opacity sigmoid activation (logit → probability)
+opacities[k] = sigmoid(points[i].opacity);
+```
+
+### 16.3 SH Coefficient Reordering
+
+The PLY stores SH coefficients in a specific interleaved order. `SplatCloudC` reorders them:
+
+```cpp
+// DC coefficients (band 0): direct copy
+shs[k].shs[0] = points[i].shs.shs[0];  // R
+shs[k].shs[1] = points[i].shs.shs[1];  // G
+shs[k].shs[2] = points[i].shs.shs[2];  // B
+
+// Higher bands: deinterleave RGB
+for (int j = 1; j < SH_N; j++) {
+    shs[k].shs[j*3 + 0] = points[i].shs.shs[(j-1) + 3];
+    shs[k].shs[j*3 + 1] = points[i].shs.shs[(j-1) + SH_N + 2];
+    shs[k].shs[j*3 + 2] = points[i].shs.shs[(j-1) + 2*SH_N + 1];
+}
+```
+
+---
+
+## 17. Utility Components
+
+### 17.1 MetalBuffer
+
+Type-safe wrapper around `MTLBuffer` providing:
+- Typed subscript access (`buffer[i]`)
+- Array initialization (`MetalBuffer(device:array:index:)`)
+- Element count tracking
+
+### 17.2 Metal+Extensions
+
+Extension on `MTLPixelFormat` providing a computed property `srgb: Bool` that returns whether a given pixel format is an sRGB format. Used by `ARBackgroundRenderer` to configure color space handling.
+
+### 17.3 DragHelper
+
+Encapsulates gesture recognition for interactive 3D manipulation:
+- `UIRotationGestureRecognizer` → roll rotation (unused)
+- `UIPanGestureRecognizer` (1 touch) → Y-axis rotation
+- `UIPanGestureRecognizer` (2 touches) → XZ translation
+- `UIPinchGestureRecognizer` → uniform scaling
+
+### 17.4 ARBackgroundRenderer
+
+Extends Satin's `PostProcessor` to render the ARKit camera feed into a Metal texture. Handles:
+- `CVPixelBuffer` → `CVMetalTexture` conversion (Y plane as `.r8Unorm`, CbCr plane as `.rg8Unorm`)
+- Display orientation handling via `displayTransform(for:viewportSize:)`
+- Texture coordinate adjustment for aspect-fill rendering
+
+### 17.5 ARPerspectiveCamera
+
+Subclass of Satin's `PerspectiveCamera` that derives view/projection matrices from the ARKit `ARFrame.camera` pose, with proper handling of device orientation rotations (portrait, landscape, etc.).
+
+---
+
+## 18. Dataset Configurations
+
+Three datasets are pre-configured in `Models.swift`:
+
+| Config Name | Dataset | Frames | Groups | Video Folder | Splat Count | Init Position |
+|------------|---------|--------|--------|-------------|------------|---------------|
+| `.ykxBoxing` | YKX Boxing | 630 | 63 | `ykx_boxing_long_qp15_380/` | ~380K | `[0, 0, 0]` |
+| `.actor2Dancing4K` | 4K Actor2 | 40 | 2 | `4K_Actor2_Dancing_sh0_res4_qp15/` | ~80K | `[0, 0, 0]` |
+| `.actor2DancingMedRes` | 4K Actor2 (med) | 40 | 2 | `4K_Actor2_Dancing_sh0_res2_qp15/` | ~80K | `[0, 0, 0]` |
+
+**Entry point**: `MainViewController.swift` presents a `SplatChoiceView` with three buttons. Each navigates to `SplatSimpleView` with the corresponding `dataIndex`:
+
+```
+dataIndex 1 → .ykxBoxing       (630 frames, 63 groups × 10 frames each)
+dataIndex 2 → .actor2Dancing4K (40 frames, 2 groups × 20 frames each)
+dataIndex 3 → .actor2DancingMedRes (40 frames, 2 groups × 20 frames each)
+```
+
+---
+
+## Appendix A: Complete File Reference
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `AppDelegate.swift` | 47 | Standard iOS app lifecycle (no custom logic) |
+| `MainViewController.swift` | ~300 | SwiftUI entry view with dataset selection buttons |
+| `SplatSimpleView.swift` | 742 | Core view: video loading, frame management, rendering loop, UI controls |
+| `SplatCloud.swift` | 897 | Splat buffer management, GPU compute dispatch, sorting, instanced rendering |
+| `SplatShaders.metal` | 529 | All GPU shaders: `generateSplats`, `splat_vertex`, `splat_fragment`, `splat_set_depths` |
+| `ShaderTypes.h` | ~60 | Shared C structs: `Splat` (64 bytes), `Uniforms` |
+| `BridgingHeader.h` | 17 | Exposes `ShaderTypes.h`, `OpencvTest.h`, `sort_splats()` to Swift |
+| `ARSplatView.swift` | 345 | AR mode: ARKit session + splat rendering + camera feed compositing |
+| `Models/Models.swift` | 187 | `SplatModelInfo`, `DatasetConfig`, dataset configurations |
+| `OpencvTest.h` / `.mm` | 142 | OpenCV H.264 video decoding to grayscale `UIImage` arrays |
+| `Utils/SplatCloudC.h` / `.mm` | 376 | Legacy PLY file parser with Morton-code sorting |
+| `Utils/splat_utils.mm` | 51 | CPU-side `std::sort` + splat buffer reordering |
+| `Utils/MetalBuffer.swift` | ~100 | Type-safe `MTLBuffer` wrapper |
+| `Utils/DragHelper.swift` | ~130 | Gesture recognition for 3D object manipulation |
+| `Utils/ARBackgroundRenderer.swift` | ~180 | ARKit camera feed → Metal texture rendering |
+| `Utils/ARPerspectiveCamera.swift` | ~90 | ARKit-driven perspective camera |
+| `Utils/Metal+Extensions.swift` | 294 | `MTLPixelFormat.srgb` computed property |
+
+## Appendix B: Dependency Graph
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      External Frameworks                     │
+├─────────────────────────────────────────────────────────────┤
+│  opencv2.framework    │ H.264 video decoding (VideoCapture)  │
+│  Satin (v13)          │ 3D rendering (Object, Renderer)      │
+│  SatinCore            │ Core math types, geometry             │
+│  Forge                │ Metal app lifecycle (ForgeView)       │
+│  ARKit                │ World tracking, camera pose           │
+│  Metal / MetalKit     │ GPU compute + rendering               │
+└─────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      App Architecture                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  AppDelegate                                                  │
+│    └── MainViewController (SwiftUI)                           │
+│         ├── SplatSimpleView (non-AR mode)                     │
+│         │    ├── VideoProcessor (decodes H.264 → UIImages)    │
+│         │    ├── CameraControllerRenderer (Forge.Renderer)    │
+│         │    │    ├── SplatCloud × N (one per frame)           │
+│         │    │    │    ├── Metal textures (17 R8Unorm)         │
+│         │    │    │    ├── generateSplats compute kernel       │
+│         │    │    │    ├── Splat buffer (64 bytes/splat)       │
+│         │    │    │    ├── sort_splats (CPU std::sort)         │
+│         │    │    │    └── splat_vertex/fragment shaders       │
+│         │    │    └── PerspectiveCamera (Satin)                │
+│         │    └── UI: Slider + FPS counter                     │
+│         │                                                      │
+│         └── ARSplatView (AR mode)                             │
+│              ├── ARSplatRenderer (Forge.Renderer)             │
+│              │    ├── ARSession (ARWorldTrackingConfiguration) │
+│              │    ├── ARPerspectiveCamera                     │
+│              │    ├── ARBackgroundRenderer                    │
+│              │    ├── SplatCloud × N                          │
+│              │    └── PostProcessor (blend splats + camera)   │
+│              └── DragHelper (gestures)                        │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
