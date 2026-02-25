@@ -168,6 +168,10 @@ class SplatCloud : Object, Renderable {
     
     private var dataIndex : Int = 0
     
+    // Per-frame timing (ms) — written by sortSplats() and render()
+    var lastSortMs: Double = 0.0
+    var lastRenderEncodeMs: Double = 0.0
+    
     // MARK: PLY Init
         
     init?(model : SplatModelInfo, renderDestination : RenderDestinationProvider, groupFrame : [[UIImage]], minmax : [Double], frameIndex : Int, dataIndex: Int) throws {
@@ -529,29 +533,14 @@ class SplatCloud : Object, Renderable {
             
             isSorting = true
             
-            //let d1 = Date()
+            let sortStart = CACurrentMediaTime()
             
-            // ~2 ms
             self.setSplatDepthsComputeShader()
+            self._sortSplatsCpp()
             
-            //let durComputeMs = d1.timeIntervalSinceNow * -1000.0
+            self.lastSortMs = (CACurrentMediaTime() - sortStart) * 1000.0
             
-            //DispatchQueue.global(qos: .userInteractive).async {
-                
-            
-                //let d2 = Date()
-                
-                self._sortSplatsCpp()
-                //let durCpuMs = d2.timeIntervalSinceNow * -1000
-            
-                //let durTotalMs = d1.timeIntervalSinceNow * -1000.0
-            
-                //NSLog("Sort took %6.1f ms - shader: %.1f ms ,  std::sort %.1f ms", durTotalMs, durComputeMs, durCpuMs )
-                
-                
-                self.isSorting = false
-            
-            //}
+            self.isSorting = false
             
         }
         
@@ -577,9 +566,7 @@ class SplatCloud : Object, Renderable {
         
         self.sortSplats()
         
-        
-        //renderEncoder.setCullMode(.none)
-        //renderEncoder.setFrontFacing(.counterClockwise)
+        let encodeStart = CACurrentMediaTime()
         
         renderEncoder.setDepthStencilState(depthState)
         renderEncoder.setRenderPipelineState(pipelineState)
@@ -587,20 +574,17 @@ class SplatCloud : Object, Renderable {
         renderEncoder.setVertexBuffer(self.quadBuffer.buffer, offset: 0, index: 0)
         renderEncoder.setVertexBuffer(self.splats.buffer, offset: 0, index: 1)
         
-        
-        
-        
         var uni : Uniforms = self.uniforms
         renderEncoder.setVertexBytes(&uni, length: MemoryLayout<Uniforms>.stride, index: 2)
         renderEncoder.setFragmentBytes(&uni, length: MemoryLayout<Uniforms>.stride, index: 2)
                         
-        
         renderEncoder.drawPrimitives(
                                     type: .triangleStrip,
                                     vertexStart: 0,
                                     vertexCount: self.quadBuffer.count,
                                     instanceCount: self.splats.count )
-
+        
+        self.lastRenderEncodeMs = (CACurrentMediaTime() - encodeStart) * 1000.0
                 
         frame_index += 1
         

@@ -15,6 +15,135 @@ import Satin
 import SatinCore
 
 
+// MARK: - Performance Logger
+
+/// Stores one row of per-draw-call timing data.
+struct BinPerfSample {
+    let frameIndex: Int         // which splat frame is showing
+    let drawCallIndex: Int      // monotonic draw counter
+    let cpuStageMs: Double      // drawStart -> drawEnd (all CPU work inside draw())
+    let gpuQueueWaitMs: Double  // drawEnd -> gpuStartTime (CPU/GPU queue wait)
+    let gpuAndCallbackMs: Double // gpuStartTime -> completion callback entry
+    let endToEndMs: Double      // CPU start of draw() -> completion handler entry
+}
+
+/// Accumulates timing samples in memory, dumps to CSV on demand.
+/// - Debug builds: also prints every Nth sample to console.
+/// - Release builds: silent until exportToCSV().
+class BinPerfLogger {
+    private(set) var samples: [BinPerfSample] = []
+    private var debugPrintInterval: Int = 60  // print every N samples in debug
+    private var hasExported = false
+    private let lock = NSLock()
+    private var inFlightSamples: Int = 0
+    
+    func beginInFlightSample() {
+        lock.lock()
+        inFlightSamples += 1
+        lock.unlock()
+    }
+
+    /// Record one completed sample and mark one in-flight draw as finished.
+    /// In DEBUG prints to console periodically.
+    func recordCompleted(_ sample: BinPerfSample) {
+        lock.lock()
+        samples.append(sample)
+        inFlightSamples = max(0, inFlightSamples - 1)
+        let sampleCount = samples.count
+        lock.unlock()
+        
+        #if DEBUG
+        if sampleCount % debugPrintInterval == 1 {
+            NSLog("[BinPerf] draw#%d  frame=%d  cpuStage=%.2fms  gpuQueueWait=%.2fms  gpuAndCallback=%.2fms  endToEnd=%.2fms",
+                  sample.drawCallIndex, sample.frameIndex,
+                  sample.cpuStageMs, sample.gpuQueueWaitMs,
+                  sample.gpuAndCallbackMs,
+                  sample.endToEndMs)
+        }
+        #endif
+    }
+
+    /// Wait briefly for command-buffer completion handlers so final frames aren't dropped on export.
+    private func waitForPendingSamples(maxWaitMs: Int = 500) {
+        let start = CACurrentMediaTime()
+        while true {
+            lock.lock()
+            let pending = inFlightSamples
+            lock.unlock()
+
+            if pending == 0 { return }
+
+            let elapsedMs = (CACurrentMediaTime() - start) * 1000.0
+            if elapsedMs >= Double(maxWaitMs) {
+                NSLog("[BinPerf] Export timeout: %d samples still in-flight", pending)
+                return
+            }
+
+            usleep(2_000) // 2ms poll
+        }
+    }
+    
+    /// Also store a one-time init record (bin loading + SplatCloud creation).
+    var initLoadMs: Double = 0
+    var initSplatCloudBuildMs: Double = 0
+    var numFrames: Int = 0
+    var numSplatsPerFrame: Int = 0
+    
+    /// Export all samples to a CSV file in the app's Documents directory.
+    /// Returns the file URL on success.
+    @discardableResult
+    func exportToCSV() -> URL? {
+        waitForPendingSamples()
+
+        guard !hasExported else {
+            NSLog("[BinPerf] CSV already exported, skipping duplicate")
+            return nil
+        }
+
+        lock.lock()
+        let snapshot = samples
+        lock.unlock()
+
+        guard !snapshot.isEmpty else {
+            NSLog("[BinPerf] No samples to export")
+            return nil
+        }
+        hasExported = true
+        let fm = FileManager.default
+        guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            NSLog("[BinPerf] ERROR: cannot find Documents directory")
+            return nil
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let stamp = dateFormatter.string(from: Date())
+        let filename = "bin_perf_\(stamp).csv"
+        let fileURL = docs.appendingPathComponent(filename)
+        
+        var csv = "# BinPerfLog  frames=\(numFrames)  splats/frame=\(numSplatsPerFrame)  initLoadMs=\(String(format: "%.2f", initLoadMs))  initBuildMs=\(String(format: "%.2f", initSplatCloudBuildMs))\n"
+        csv += "draw_call,frame_index,cpu_stage_ms,gpu_queue_wait_ms,gpu_and_callback_ms,end_to_end_ms\n"
+        
+        for s in snapshot {
+            csv += String(format: "%d,%d,%.3f,%.3f,%.3f,%.3f\n",
+                          s.drawCallIndex, s.frameIndex,
+                          s.cpuStageMs, s.gpuQueueWaitMs,
+                          s.gpuAndCallbackMs,
+                          s.endToEndMs)
+        }
+        
+        do {
+            try csv.write(to: fileURL, atomically: true, encoding: .utf8)
+            NSLog("[BinPerf] CSV exported: %@ (%d samples)  →  Files > On My iPhone > MetalSplat", fileURL.lastPathComponent, snapshot.count)
+            return fileURL
+        } catch {
+            NSLog("[BinPerf] ERROR writing CSV: %@", error.localizedDescription)
+            return nil
+        }
+    }
+}
+
+
 // MARK: - Bin Data Loader
 
 /// Holds raw float32 data for a single frame's Gaussian attributes.
@@ -115,6 +244,9 @@ class BinCameraControllerRenderer: Forge.Renderer {
     
     let binConfig: BinDatasetConfig
     
+    let perfLogger = BinPerfLogger()
+    var drawCallCounter: Int = 0
+    
     func togglePause(_ isPaused: Bool) {
         self.isPaused = isPaused
     }
@@ -166,8 +298,10 @@ class BinCameraControllerRenderer: Forge.Renderer {
         renderer.clearColor = MTLClearColorMake(1.0, 1.0, 1.0, 1.0)
         
         // Load all bin data at startup
+        let loadStart = CACurrentMediaTime()
         let loader = BinDataLoader(binFolder: binConfig.binFolder, totalFrames: binConfig.totalFrames)
         let allFrames = loader.loadAllFrames()
+        let loadElapsed = (CACurrentMediaTime() - loadStart) * 1000.0
         
         guard !allFrames.isEmpty else {
             print("BinRenderer: No frames loaded!")
@@ -175,9 +309,10 @@ class BinCameraControllerRenderer: Forge.Renderer {
         }
         
         self.currentFrameNum = allFrames.count
+        print("BinRenderer: Loaded \(currentFrameNum) frames in \(String(format: "%.1f", loadElapsed))ms")
         print("BinRenderer: Building \(currentFrameNum) SplatClouds on GPU...")
         
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let buildStart = CACurrentMediaTime()
         
         // Build SplatCloud for each frame using GPU kernel
         for (index, frameData) in allFrames.enumerated() {
@@ -229,9 +364,15 @@ class BinCameraControllerRenderer: Forge.Renderer {
             }
         }
         
-        let elapsed = CFAbsoluteTimeGetCurrent() - startTime
-        print("BinRenderer: Built \(splatClouds.count) SplatClouds in \(String(format: "%.2f", elapsed))s")
+        let buildElapsed = (CACurrentMediaTime() - buildStart) * 1000.0
+        print("BinRenderer: Built \(splatClouds.count) SplatClouds in \(String(format: "%.1f", buildElapsed))ms")
         self.currentFrameNum = splatClouds.count
+        
+        // Record init stats
+        perfLogger.initLoadMs = loadElapsed
+        perfLogger.initSplatCloudBuildMs = buildElapsed
+        perfLogger.numFrames = currentFrameNum
+        perfLogger.numSplatsPerFrame = splatClouds.first?.numPoints ?? 0
     }
     
     override func setup() {
@@ -244,6 +385,7 @@ class BinCameraControllerRenderer: Forge.Renderer {
     }
     
     deinit {
+        perfLogger.exportToCSV()
         cameraController.disable()
     }
     
@@ -255,7 +397,12 @@ class BinCameraControllerRenderer: Forge.Renderer {
         guard let renderPassDescriptor = view.currentRenderPassDescriptor else { return }
         guard currentFrameNum > 0 else { return }
         
+        let drawStart = CACurrentMediaTime()
+
+        // Frame index shown for this draw (before optional swap for next draw)
+        let visibleFrame = (progress.progressValue / stepInd) % currentFrameNum
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(1.0, 1.0, 1.0, 1.0)
+        
         renderer.draw(
             renderPassDescriptor: renderPassDescriptor,
             commandBuffer: commandBuffer,
@@ -279,6 +426,38 @@ class BinCameraControllerRenderer: Forge.Renderer {
                 scene.remove(splatClouds[oldFrameIndex])
                 scene.add(splatClouds[newFrameIndex])
             }
+        }
+
+        let drawEnd = CACurrentMediaTime()
+        let cpuStageMs = (drawEnd - drawStart) * 1000.0
+        
+        // Record sample on command-buffer completion so endToEndMs captures CPU+GPU wall time.
+        let drawCallIndex = drawCallCounter
+        drawCallCounter += 1
+        perfLogger.beginInFlightSample()
+        commandBuffer.addCompletedHandler { [weak self] cb in
+            guard let self else { return }
+
+            let callbackEntry = CACurrentMediaTime()
+            let endToEndMs = (callbackEntry - drawStart) * 1000.0
+
+            var gpuQueueWaitMs = -1.0
+            var gpuAndCallbackMs = -1.0
+            if cb.gpuStartTime > 0 {
+                gpuQueueWaitMs = (cb.gpuStartTime - drawEnd) * 1000.0
+                gpuAndCallbackMs = (callbackEntry - cb.gpuStartTime) * 1000.0
+            }
+
+            let sample = BinPerfSample(
+                frameIndex: visibleFrame,
+                drawCallIndex: drawCallIndex,
+                cpuStageMs: cpuStageMs,
+                gpuQueueWaitMs: gpuQueueWaitMs,
+                gpuAndCallbackMs: gpuAndCallbackMs,
+                endToEndMs: endToEndMs
+            )
+
+            self.perfLogger.recordCompleted(sample)
         }
     }
     
@@ -320,6 +499,7 @@ struct SplatBinView: View {
         VStack {
             HStack {
                 Button(action: {
+                    renderer?.perfLogger.exportToCSV()
                     self.presentationMode.wrappedValue.dismiss()
                 }) {
                     Image(systemName: "arrow.left")
@@ -372,6 +552,9 @@ struct SplatBinView: View {
             if renderer == nil {
                 renderer = BinCameraControllerRenderer(model: model, progress: progress, binConfig: binConfig)
             }
+        }
+        .onDisappear {
+            renderer?.perfLogger.exportToCSV()
         }
     }
     

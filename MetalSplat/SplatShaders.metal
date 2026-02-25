@@ -546,7 +546,7 @@ kernel void generateSplatsFromBin(
     float opacity_activated = 1.0 / (1.0 + exp(-opacity_logit));
 
     float4 color  = float4(0.5 + SH_C0 * colors[index*3],
-                           0.5 + SH_C0 * co lors[index*3+1],
+                           0.5 + SH_C0 * colors[index*3+1],
                            0.5 + SH_C0 * colors[index*3+2],
                            opacity_activated);
 
