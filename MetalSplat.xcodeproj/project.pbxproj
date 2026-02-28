@@ -13,36 +13,38 @@
 		4243652A2AB4E8BC00C3EF55 /* splat_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 424365292AB4E8BC00C3EF55 /* splat_utils.mm */; };
 		4243652D2AB5021500C3EF55 /* Satin in Frameworks */ = {isa = PBXBuildFile; productRef = 4243652C2AB5021500C3EF55 /* Satin */; };
 		4243652F2AB5021500C3EF55 /* SatinCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4243652E2AB5021500C3EF55 /* SatinCore */; };
-		424365312AB502F400C3EF55 /* SplatSimpleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424365302AB502F400C3EF55 /* SplatSimpleView.swift */; };
-		B1C2D3E4F5A6B7C8D9E0F1A3 /* SplatBinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */; };
+		424365312AB502F400C3EF55 /* SplatSimpleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424365302AB502F400C3EF55 /* SplatSimpleView.swift */; platformFilter = ios; };
 		424365342AB503E500C3EF55 /* Forge in Frameworks */ = {isa = PBXBuildFile; productRef = 424365332AB503E500C3EF55 /* Forge */; };
 		424E67752AB495E0007DE614 /* SplatShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 424E67742AB495E0007DE614 /* SplatShaders.metal */; };
 		4263EA7C2AB8AD90001EE430 /* mic_60k.ply in Resources */ = {isa = PBXBuildFile; fileRef = 4263EA7B2AB8AD90001EE430 /* mic_60k.ply */; };
 		429289BF2AB9097200318B9C /* lego_60k.ply in Resources */ = {isa = PBXBuildFile; fileRef = 429289BE2AB9097200318B9C /* lego_60k.ply */; };
-		42D75AAB2AB24FB500E6BA61 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D75AAA2AB24FB500E6BA61 /* AppDelegate.swift */; };
+		42D75AAB2AB24FB500E6BA61 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D75AAA2AB24FB500E6BA61 /* AppDelegate.swift */; platformFilter = ios; };
 		42D75AB52AB24FB500E6BA61 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 42D75AB32AB24FB500E6BA61 /* Main.storyboard */; };
 		42D75AB72AB24FB800E6BA61 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42D75AB62AB24FB800E6BA61 /* Assets.xcassets */; };
 		42D75ABA2AB24FB800E6BA61 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 42D75AB82AB24FB800E6BA61 /* LaunchScreen.storyboard */; };
 		42D75AC32AB3485500E6BA61 /* MetalBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D75AC22AB3485500E6BA61 /* MetalBuffer.swift */; };
 		42D75AC52AB3499500E6BA61 /* SplatCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D75AC42AB3499500E6BA61 /* SplatCloud.swift */; };
-		42F4B0442AB602A700C0D69D /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B0432AB602A700C0D69D /* MainViewController.swift */; };
-		42F4B0482AB6030E00C0D69D /* ARBackgroundRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B0462AB6030D00C0D69D /* ARBackgroundRenderer.swift */; };
-		42F4B0492AB6030E00C0D69D /* ARPerspectiveCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B0472AB6030E00C0D69D /* ARPerspectiveCamera.swift */; };
+		42F4B0442AB602A700C0D69D /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B0432AB602A700C0D69D /* MainViewController.swift */; platformFilter = ios; };
+		42F4B0482AB6030E00C0D69D /* ARBackgroundRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B0462AB6030D00C0D69D /* ARBackgroundRenderer.swift */; platformFilter = ios; };
+		42F4B0492AB6030E00C0D69D /* ARPerspectiveCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B0472AB6030E00C0D69D /* ARPerspectiveCamera.swift */; platformFilter = ios; };
 		42F4B04B2AB6036400C0D69D /* Metal+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B04A2AB6036400C0D69D /* Metal+Extensions.swift */; };
 		42F4B04D2AB604C500C0D69D /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 42F4B04C2AB604C500C0D69D /* Assets */; };
-		42F4B04F2AB60F5300C0D69D /* ARSplatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */; };
+		42F4B04F2AB60F5300C0D69D /* ARSplatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */; platformFilter = ios; };
 		7B40544D2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 in Resources */ = {isa = PBXBuildFile; fileRef = 7B40544E2F39A001005B79C0 /* 4K_Actor2_Dancing_sh0_res4_qp15 */; };
 		7B40544F2F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4054502F39A002005B79C0 /* viewer_min_max_4k_actor2_lowres.json */; };
 		7B4054512F39A003005B79C0 /* group_info_4k_actor2_lowres.json in Resources */ = {isa = PBXBuildFile; fileRef = 7B4054522F39A003005B79C0 /* group_info_4k_actor2_lowres.json */; };
 		A1B2C3D4E5F6A7B8C9D0E1F3 /* 4K_Actor2_Dancing_sh0_res2_qp15 in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* 4K_Actor2_Dancing_sh0_res2_qp15 */; };
 		A1B2C3D4E5F6A7B8C9D0E1F5 /* viewer_min_max_4k_actor2_medres.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F4 /* viewer_min_max_4k_actor2_medres.json */; };
 		A1B2C3D4E5F6A7B8C9D0E1F7 /* group_info_4k_actor2_medres.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F6 /* group_info_4k_actor2_medres.json */; };
-		AAA635822BDFD21500B68F05 /* OpencvTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAA635812BDFD21500B68F05 /* OpencvTest.mm */; };
+		AAA635822BDFD21500B68F05 /* OpencvTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAA635812BDFD21500B68F05 /* OpencvTest.mm */; platformFilter = ios; };
+		B1C2D3E4F5A6B7C8D9E0F1A3 /* SplatBinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */; platformFilter = ios; };
+		B2A1C3D4E5F60718293A4B5C /* VisionOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A1C3D4E5F60718293A4B5B /* VisionOSApp.swift */; };
+		B2A1C3D4E5F60718293A4B5E /* VisionCompositorLayerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A1C3D4E5F60718293A4B5D /* VisionCompositorLayerHost.swift */; };
 		EBB9F1C92BED017E00B402CC /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB9F1C82BED017E00B402CC /* opencv2.framework */; };
 		EBCD32262CF757B80068E604 /* ykx_boxing_long_qp15_380 in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */; };
-		F1A2B3C4D5E6F708192A3B4C /* 4K_Actor2_Dancing_qp22_bin in Resources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */; };
 		EBCD32292CF757C80068E604 /* viewer_min_max_ykx_380.json in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */; };
 		EBCD322A2CF757C80068E604 /* group_info_ykx_380.json in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32282CF757C80068E604 /* group_info_ykx_380.json */; };
+		F1A2B3C4D5E6F708192A3B4C /* 4K_Actor2_Dancing_qp22_bin in Resources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,7 +54,6 @@
 		424365282AB4E81100C3EF55 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		424365292AB4E8BC00C3EF55 /* splat_utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = splat_utils.mm; sourceTree = "<group>"; };
 		424365302AB502F400C3EF55 /* SplatSimpleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatSimpleView.swift; sourceTree = "<group>"; };
-		B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatBinView.swift; sourceTree = "<group>"; };
 		424E67742AB495E0007DE614 /* SplatShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SplatShaders.metal; sourceTree = "<group>"; };
 		4263EA7B2AB8AD90001EE430 /* mic_60k.ply */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mic_60k.ply; sourceTree = "<group>"; };
 		429289BE2AB9097200318B9C /* lego_60k.ply */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego_60k.ply; sourceTree = "<group>"; };
@@ -80,11 +81,14 @@
 		AAA635812BDFD21500B68F05 /* OpencvTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OpencvTest.mm; sourceTree = "<group>"; };
 		AAA635832BDFD24A00B68F05 /* OpencvTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpencvTest.h; sourceTree = "<group>"; };
 		AAA6358A2BE160DE00B68F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatBinView.swift; sourceTree = "<group>"; };
+		B2A1C3D4E5F60718293A4B5B /* VisionOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionOSApp.swift; sourceTree = "<group>"; };
+		B2A1C3D4E5F60718293A4B5D /* VisionCompositorLayerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionCompositorLayerHost.swift; sourceTree = "<group>"; };
 		EBB9F1C82BED017E00B402CC /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ykx_boxing_long_qp15_380; sourceTree = "<group>"; };
-		F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = 4K_Actor2_Dancing_qp22_bin; sourceTree = "<group>"; };
 		EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = viewer_min_max_ykx_380.json; sourceTree = "<group>"; };
 		EBCD32282CF757C80068E604 /* group_info_ykx_380.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_info_ykx_380.json; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = 4K_Actor2_Dancing_qp22_bin; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +164,8 @@
 				424365302AB502F400C3EF55 /* SplatSimpleView.swift */,
 				B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */,
 				42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */,
+				B2A1C3D4E5F60718293A4B5B /* VisionOSApp.swift */,
+				B2A1C3D4E5F60718293A4B5D /* VisionCompositorLayerHost.swift */,
 				424E67742AB495E0007DE614 /* SplatShaders.metal */,
 				42D75AAC2AB24FB500E6BA61 /* ShaderTypes.h */,
 				424365282AB4E81100C3EF55 /* BridgingHeader.h */,
@@ -281,6 +287,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2A1C3D4E5F60718293A4B5C /* VisionOSApp.swift in Sources */,
+				B2A1C3D4E5F60718293A4B5E /* VisionCompositorLayerHost.swift in Sources */,
 				42F4B0442AB602A700C0D69D /* MainViewController.swift in Sources */,
 				4223AC862AB8831B0028BAAC /* Models.swift in Sources */,
 				AAA635822BDFD21500B68F05 /* OpencvTest.mm in Sources */,
@@ -379,9 +387,11 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
@@ -436,9 +446,11 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = iphoneos;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};
@@ -451,6 +463,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 723GGSVBTJ;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -460,8 +473,8 @@
 				INFOPLIST_FILE = MetalSplat/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "AR view";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				"INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphone*]" = LaunchScreen;
+				"INFOPLIST_KEY_UIMainStoryboardFile[sdk=iphone*]" = Main;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = metal;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -475,10 +488,13 @@
 				OTHER_CPLUSPLUSFLAGS = "-Wno-c++11-narrowing";
 				PRODUCT_BUNDLE_IDENTIFIER = df.www.dfdfef;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(TARGET_NAME)/BridgingHeader.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=xros*]" = 7;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
@@ -491,6 +507,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 723GGSVBTJ;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -500,8 +517,8 @@
 				INFOPLIST_FILE = MetalSplat/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "AR view";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				"INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphone*]" = LaunchScreen;
+				"INFOPLIST_KEY_UIMainStoryboardFile[sdk=iphone*]" = Main;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = metal;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -515,10 +532,13 @@
 				OTHER_CPLUSPLUSFLAGS = "-Wno-c++11-narrowing";
 				PRODUCT_BUNDLE_IDENTIFIER = df.www.dfdfef;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(TARGET_NAME)/BridgingHeader.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=xros*]" = 7;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};

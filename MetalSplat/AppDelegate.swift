@@ -5,6 +5,7 @@
 //  Created by CC Laan on 9/13/23.
 //
 
+#if os(iOS)
 import UIKit
 
 @main
@@ -37,4 +38,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
+
+#endif
 

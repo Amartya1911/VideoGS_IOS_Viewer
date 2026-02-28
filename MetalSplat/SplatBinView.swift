@@ -6,8 +6,9 @@
 //  constructs Splat structs on GPU, reuses existing sort + render pipeline.
 //
 
+#if os(iOS)
+
 import SwiftUI
-import UIKit
 import Metal
 import MetalKit
 import Forge
@@ -213,15 +214,58 @@ class BinDataLoader {
     /// Load all frames into memory.
     func loadAllFrames() -> [BinFrameData] {
         let frameIndices = enumerateFrames()
-        print("BinDataLoader: Found \(frameIndices.count) frames in \(binFolder)")
+        print("BinDataLoader: Found \(frameIndices.count)/\(totalFrames) frames in \(binFolder)")
+
+        if frameIndices.count != totalFrames {
+            print("BinDataLoader: WARNING expected \(totalFrames) frames, found \(frameIndices.count)")
+        }
+
+        if !frameIndices.isEmpty {
+            var gaps = [Int]()
+            for expected in 0..<totalFrames {
+                if !frameIndices.contains(expected) {
+                    gaps.append(expected)
+                }
+            }
+            if !gaps.isEmpty {
+                print("BinDataLoader: WARNING missing frame indices: \(gaps.prefix(10))\(gaps.count > 10 ? " ..." : "")")
+            }
+        }
         
         var allFrames = [BinFrameData]()
+        var totalBytes = 0
+        var expectedPointsPerFrame: Int?
+        var inconsistentPointFrames: [Int] = []
+
         for i in frameIndices {
             if let data = loadFrame(i) {
                 allFrames.append(data)
-                print("  Frame \(i): \(data.numPoints) splats, \(data.means.count + data.scales.count + data.quats.count + data.colors.count + data.opacities.count) bytes")
+                let frameBytes = data.means.count + data.scales.count + data.quats.count + data.colors.count + data.opacities.count
+                totalBytes += frameBytes
+
+                if let expected = expectedPointsPerFrame {
+                    if data.numPoints != expected {
+                        inconsistentPointFrames.append(i)
+                    }
+                } else {
+                    expectedPointsPerFrame = data.numPoints
+                }
+
+                print("  Frame \(i): \(data.numPoints) splats, \(frameBytes) bytes")
             }
         }
+
+        let totalMiB = Double(totalBytes) / (1024.0 * 1024.0)
+        print(String(format: "BinDataLoader: Total in-memory raw bin size: %.2f MiB", totalMiB))
+
+        if let expected = expectedPointsPerFrame {
+            if inconsistentPointFrames.isEmpty {
+                print("BinDataLoader: Point-count check OK (\(expected) splats/frame)")
+            } else {
+                print("BinDataLoader: WARNING point-count mismatch for frames: \(inconsistentPointFrames.prefix(10))\(inconsistentPointFrames.count > 10 ? " ..." : "")")
+            }
+        }
+
         return allFrames
     }
 }
@@ -284,7 +328,6 @@ class BinCameraControllerRenderer: Forge.Renderer {
     override func setupMtkView(_ metalKitView: MTKView) {
         
         metalKitView.depthStencilPixelFormat = .invalid
-        metalKitView.backgroundColor = UIColor.white
         metalKitView.autoResizeDrawable = true
         metalKitView.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0)
         metalKitView.preferredFramesPerSecond = 60
@@ -564,3 +607,5 @@ struct SplatBinView: View {
         }
     }
 }
+
+#endif

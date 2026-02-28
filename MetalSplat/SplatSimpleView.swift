@@ -5,6 +5,8 @@
 //  Created by CC Laan on 9/15/23.
 //
 
+#if os(iOS)
+
 import SwiftUI
 import UIKit
 
@@ -739,3 +741,5 @@ struct SplatSimpleView: View {
             timer = nil
         }
 }
+
+    #endif

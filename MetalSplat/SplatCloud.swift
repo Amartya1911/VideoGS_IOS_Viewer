@@ -10,7 +10,9 @@ import Metal
 import MetalKit
 import Satin
 import SatinCore
+#if canImport(UIKit)
 import UIKit
+#endif
 
 
 
@@ -33,6 +35,7 @@ enum SplatError: Error {
     case plyNonFloatPropertyFound
 }
 
+#if canImport(UIKit)
 func grayPixelValue(in image: UIImage, at x: Int, y: Int) -> UInt8? {
     guard let cgImage = image.cgImage, x >= 0, y >= 0, x < cgImage.width, y < cgImage.height else {
         return nil
@@ -98,6 +101,7 @@ func printVideosFramesShape(videosFrames: [[UIImage]]) {
         print("Video \(index + 1): \(shape.1) frames")
     }
 }
+#endif
 
 func printDequantizedDataShape(dequantizedData: [[Double]]) {
     print("Total number of frames: \(dequantizedData.count)")
@@ -173,6 +177,7 @@ class SplatCloud : Object, Renderable {
     var lastRenderEncodeMs: Double = 0.0
     
     // MARK: PLY Init
+    #if canImport(UIKit)
         
     init?(model : SplatModelInfo, renderDestination : RenderDestinationProvider, groupFrame : [[UIImage]], minmax : [Double], frameIndex : Int, dataIndex: Int) throws {
                 
@@ -439,6 +444,7 @@ class SplatCloud : Object, Renderable {
 //        self.temp_splats = self.splats
         
     }
+    #endif
     
     // MARK: Bin Init — construct SplatCloud from raw float32 bin buffers on GPU
     

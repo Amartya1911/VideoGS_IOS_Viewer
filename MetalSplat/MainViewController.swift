@@ -5,6 +5,8 @@
 //  Created by CC Laan on 9/16/23.
 //
 
+#if os(iOS)
+
 import Foundation
 import UIKit
 import SwiftUI
@@ -146,3 +148,5 @@ class MainViewController : UIViewController {
         
     }
 }
+
+#endif
