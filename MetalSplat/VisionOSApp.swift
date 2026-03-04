@@ -13,8 +13,8 @@ struct MetalSplatVisionApp: App {
         }
 
         ImmersiveSpace(id: appModel.immersiveSpaceID) {
-            CompositorLayer { layerRenderer in
-                appModel.compositorRenderer.attach(
+            CompositorLayer(configuration: ContentStageConfiguration()) { layerRenderer in
+                appModel.compositorRenderer.run(
                     layerRenderer: layerRenderer,
                     dataset: appModel.selectedDataset,
                     isPlaying: appModel.isPlaying
@@ -71,7 +71,9 @@ struct VisionControlPanelView: View {
                             await dismissImmersiveSpace()
                             appModel.isImmersiveActive = false
                         } else {
+                            print("Attempting to open ImmersiveSpace with ID: \(appModel.immersiveSpaceID)")
                             let result = await openImmersiveSpace(id: appModel.immersiveSpaceID)
+                            print("openImmersiveSpace(id: \(appModel.immersiveSpaceID)) returned: \(result)")
                             if case .opened = result {
                                 appModel.isImmersiveActive = true
                             }

@@ -110,7 +110,8 @@ struct BinDatasetConfig {
     
     static let actor2DancingBin = BinDatasetConfig(
         binFolder: "4K_Actor2_Dancing_qp22_bin",
-        totalFrames: 20,
+        totalFrames: 40
+        ,
         initPos: [0.0, 0.0, 0.0]
     )
     

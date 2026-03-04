@@ -511,10 +511,13 @@ class SplatCloud : Object, Renderable {
         computeEncoder.setBuffer(binBuffers.opacities, offset: 0, index: 4)
         computeEncoder.setBuffer(self.splats.buffer, offset: 0, index: 5)
         
-        let threadsPerGrid = MTLSize(width: numPoints, height: 1, depth: 1)
+        var numSplatsU: UInt32 = UInt32(numPoints)
+        computeEncoder.setBytes(&numSplatsU, length: MemoryLayout<UInt32>.size, index: 6)
+        
         let maxThreads = binPipelineState.maxTotalThreadsPerThreadgroup
         let threadsPerGroup = MTLSize(width: min(maxThreads, numPoints), height: 1, depth: 1)
-        computeEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerGroup)
+        let threadgroupCount = MTLSize(width: (numPoints + threadsPerGroup.width - 1) / threadsPerGroup.width, height: 1, depth: 1)
+        computeEncoder.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadsPerGroup)
         
         computeEncoder.endEncoding()
         commandBuffer.commit()
@@ -717,10 +720,13 @@ class SplatCloud : Object, Renderable {
         
         var uni : Uniforms = self.uniforms
         computeEncoder.setBytes(&uni, length: MemoryLayout<Uniforms>.stride, index: 2)
+        
+        var numSplatsU: UInt32 = UInt32(numPoints)
+        computeEncoder.setBytes(&numSplatsU, length: MemoryLayout<UInt32>.size, index: 3)
                                         
-        let threadPerGrid = MTLSize(width: numPoints, height: 1, depth: 1)
-        let threadsPerThreadgroup = MTLSize(width: 1, height: 1, depth: 1)
-        computeEncoder.dispatchThreads(threadPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
+        let threadsPerThreadgroup = MTLSize(width: 64, height: 1, depth: 1)
+        let threadgroupCount = MTLSize(width: (numPoints + 63) / 64, height: 1, depth: 1)
+        computeEncoder.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadsPerThreadgroup)
         
         computeEncoder.endEncoding()
         commandBuffer.commit()
@@ -761,10 +767,9 @@ class SplatCloud : Object, Renderable {
         computeEncoder.setBuffer(minmaxBuffer, offset: 0, index: 1)
         computeEncoder.setBuffer(initPosBuffer, offset: 0, index: 2)
         
-        let threadsPerGrid = MTLSize(width: width, height: height, depth: 1)
         let threadsPerThreadgroup = MTLSize(width: 16, height: 16, depth: 1)
-        
-        computeEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
+        let threadgroupCount = MTLSize(width: (width + 15) / 16, height: (height + 15) / 16, depth: 1)
+        computeEncoder.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadsPerThreadgroup)
         
         computeEncoder.endEncoding()
         commandBuffer.commit()

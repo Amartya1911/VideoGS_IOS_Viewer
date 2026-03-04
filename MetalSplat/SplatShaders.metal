@@ -368,8 +368,10 @@ fragment float4 splat_fragment(VertexOut in [[stage_in]],
 kernel void splat_set_depths(device int64_t * splat_indices [[buffer(0)]],
                              const device Splat * splats [[buffer(1)]],
                              constant Uniforms & uniforms [[ buffer(2) ]],
+                             constant uint & numSplats [[ buffer(3) ]],
                              uint index [[thread_position_in_grid]] )
 {
+    if (index >= numSplats) return;
             
     Splat splat = splats[index];
     
@@ -489,6 +491,9 @@ kernel void generateSplats(
     device const float* init_pos [[ buffer(2) ]],
     uint2 gid [[thread_position_in_grid]])
 {
+    // Bounds check for dispatchThreadgroups rounding
+    if (gid.x >= x0.get_width() || gid.y >= x0.get_height()) return;
+    
     uint index = gid.y * x0.get_width() + gid.x;
     
     float xVal = float((uint(x1.read(gid).r * 255.0) << 8) + uint(x0.read(gid).r * 255.0));
@@ -535,8 +540,10 @@ kernel void generateSplatsFromBin(
     device const float* colors     [[ buffer(3) ]],   // N×3 flat float32 (SH DC coefficients)
     device const float* opacities  [[ buffer(4) ]],   // N flat float32 (logit space)
     device Splat* splats           [[ buffer(5) ]],   // output
+    constant uint & numSplats      [[ buffer(6) ]],
     uint index [[thread_position_in_grid]])
 {
+    if (index >= numSplats) return;
     float SH_C0 = 0.28209479177387814;
 
     float4 center = float4(means[index*3], means[index*3+1], means[index*3+2], 1.0);

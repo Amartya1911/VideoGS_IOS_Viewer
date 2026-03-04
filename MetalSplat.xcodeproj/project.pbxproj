@@ -44,6 +44,7 @@
 		EBCD32262CF757B80068E604 /* ykx_boxing_long_qp15_380 in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32252CF757B80068E604 /* ykx_boxing_long_qp15_380 */; };
 		EBCD32292CF757C80068E604 /* viewer_min_max_ykx_380.json in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32272CF757C80068E604 /* viewer_min_max_ykx_380.json */; };
 		EBCD322A2CF757C80068E604 /* group_info_ykx_380.json in Resources */ = {isa = PBXBuildFile; fileRef = EBCD32282CF757C80068E604 /* group_info_ykx_380.json */; };
+		C1D2E3F4A5B6C7D8E9F0A1B2 /* BinDataLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B6C7D8E9F0A1B1 /* BinDataLoader.swift */; };
 		F1A2B3C4D5E6F708192A3B4C /* 4K_Actor2_Dancing_qp22_bin in Resources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F708192A3B4B /* 4K_Actor2_Dancing_qp22_bin */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +83,7 @@
 		AAA635832BDFD24A00B68F05 /* OpencvTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpencvTest.h; sourceTree = "<group>"; };
 		AAA6358A2BE160DE00B68F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatBinView.swift; sourceTree = "<group>"; };
+		C1D2E3F4A5B6C7D8E9F0A1B1 /* BinDataLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinDataLoader.swift; sourceTree = "<group>"; };
 		B2A1C3D4E5F60718293A4B5B /* VisionOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionOSApp.swift; sourceTree = "<group>"; };
 		B2A1C3D4E5F60718293A4B5D /* VisionCompositorLayerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionCompositorLayerHost.swift; sourceTree = "<group>"; };
 		EBB9F1C82BED017E00B402CC /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 				42F4B0432AB602A700C0D69D /* MainViewController.swift */,
 				42D75AC42AB3499500E6BA61 /* SplatCloud.swift */,
 				424365302AB502F400C3EF55 /* SplatSimpleView.swift */,
+				C1D2E3F4A5B6C7D8E9F0A1B1 /* BinDataLoader.swift */,
 				B1C2D3E4F5A6B7C8D9E0F1A2 /* SplatBinView.swift */,
 				42F4B04E2AB60F5300C0D69D /* ARSplatView.swift */,
 				B2A1C3D4E5F60718293A4B5B /* VisionOSApp.swift */,
@@ -302,6 +305,7 @@
 				42F4B04B2AB6036400C0D69D /* Metal+Extensions.swift in Sources */,
 				424365312AB502F400C3EF55 /* SplatSimpleView.swift in Sources */,
 				B1C2D3E4F5A6B7C8D9E0F1A3 /* SplatBinView.swift in Sources */,
+				C1D2E3F4A5B6C7D8E9F0A1B2 /* BinDataLoader.swift in Sources */,
 				42D75AC52AB3499500E6BA61 /* SplatCloud.swift in Sources */,
 				42D75AC32AB3485500E6BA61 /* MetalBuffer.swift in Sources */,
 			);
@@ -471,14 +475,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = MetalSplat/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "AR view";
+				"INFOPLIST_KEY_NSCameraUsageDescription[sdk=iphone*]" = "AR view";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
 				"INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphone*]" = LaunchScreen;
 				"INFOPLIST_KEY_UIMainStoryboardFile[sdk=iphone*]" = Main;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = metal;
-				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UIRequiredDeviceCapabilities[sdk=iphone*]" = metal;
+				"INFOPLIST_KEY_UIStatusBarHidden[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*]" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone[sdk=iphone*]" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -515,14 +520,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = MetalSplat/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "AR view";
+				"INFOPLIST_KEY_NSCameraUsageDescription[sdk=iphone*]" = "AR view";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
 				"INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphone*]" = LaunchScreen;
 				"INFOPLIST_KEY_UIMainStoryboardFile[sdk=iphone*]" = Main;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = metal;
-				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UIRequiredDeviceCapabilities[sdk=iphone*]" = metal;
+				"INFOPLIST_KEY_UIStatusBarHidden[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*]" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone[sdk=iphone*]" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
