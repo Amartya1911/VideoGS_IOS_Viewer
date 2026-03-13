@@ -16,6 +16,7 @@ struct ContentStageConfiguration: CompositorLayerConfiguration {
                            configuration: inout LayerRenderer.Configuration) {
         print("[ContentStageConfiguration] makeConfiguration called")
         configuration.colorFormat = .bgra8Unorm_srgb
+        configuration.depthFormat = .depth32Float
         let foveationEnabled = capabilities.supportsFoveation
         configuration.isFoveationEnabled = foveationEnabled
 
@@ -23,6 +24,8 @@ struct ContentStageConfiguration: CompositorLayerConfiguration {
             foveationEnabled ? [.foveationEnabled] : []
         let supportedLayouts = capabilities.supportedLayouts(options: options)
         configuration.layout = supportedLayouts.contains(.layered) ? .layered : .dedicated
+
+        print("[ContentStageConfiguration] layout=\(supportedLayouts.contains(.layered) ? "layered" : "dedicated"), foveation=\(foveationEnabled)")
     }
 }
 
@@ -66,6 +69,12 @@ final class VisionCompositorRenderer: @unchecked Sendable {
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()
 
+    // Cached anchor — on device, every drawable MUST have a device anchor
+    // or the system silently drops the frame.  We cache the last valid one
+    // so intermittent nil returns from queryDeviceAnchor don't cause
+    // "Presenting a drawable without a device anchor" black-screen issues.
+    private var lastDeviceAnchor: DeviceAnchor?
+
     // MARK: Public API
 
     /// Blocking entry point — call from the CompositorLayer closure.
@@ -82,17 +91,41 @@ final class VisionCompositorRenderer: @unchecked Sendable {
         self.commandQueue = device?.makeCommandQueue()
         self.isPlaying = isPlaying
 
-        // Load BIN frames and build SplatClouds
-        loadDataset(dataset)
-
         // Start world tracking concurrently.
+        // We do this BEFORE loading the dataset to give ARKit time to initialize
+        // while we process the BIN files.
         Task {
             do {
+                print("[Compositor] Starting ARKit session...")
                 try await arSession.run([worldTracking])
                 print("[Compositor] ARKit world tracking active")
             } catch {
                 print("[Compositor] ARKit error: \(error)")
             }
+        }
+
+        // Load BIN frames and build SplatClouds
+        loadDataset(dataset)
+
+        // Wait for ARKit world tracking to be running before entering
+        // the render loop.  On a real device, presenting a drawable
+        // without a device anchor causes the frame to be silently dropped
+        // ("This drawable won't be presented").  Dataset loading above
+        // already gave ARKit ~300ms of head start; spin-wait here if
+        // it still needs more time.
+        do {
+            let waitStart = CACurrentMediaTime()
+            while worldTracking.state != .running {
+                Thread.sleep(forTimeInterval: 0.01) // 10ms poll
+                let elapsed = CACurrentMediaTime() - waitStart
+                if elapsed > 5.0 {
+                    print("[Compositor] ARKit still not running after 5s — proceeding anyway")
+                    break
+                }
+            }
+            let waited = (CACurrentMediaTime() - waitStart) * 1000.0
+            print(String(format: "[Compositor] ARKit wait: %.0fms (state: %@)",
+                         waited, String(describing: worldTracking.state)))
         }
 
         // Blocking render loop.
@@ -174,12 +207,13 @@ final class VisionCompositorRenderer: @unchecked Sendable {
                 }
 
                 // Match the iOS viewer's model transform:
-                // -90° rotation around X (converts Z-up Gaussian data to Y-up),
-                // scale 0.35 to fit the scene, and position 2m in front of the user.
-                let rotate = simd_quatf(angle: Float.pi * -0.5, axis: .init(x: 1, y: 0, z: 0))
+                // Note: User reported -90° X rotation resulted in "lying down" / "backside" view.
+                // Assuming native data is Y-up or similar. We rotate 180° Y to face the user.
+                // We also lower it (y=-1.0) so it stands on the "floor" relative to eye level (y=0).
+                let rotate = simd_quatf(angle: Float.pi, axis: .init(x: 1, y: 0, z: 0))
                 splatCloud.orientation = rotate
                 splatCloud.scale = .init(repeating: 0.35)
-                splatCloud.position = SIMD3<Float>(0, 0, -2)
+                splatCloud.position = SIMD3<Float>(0, 1.8, -1.75)
 
                 splatClouds.append(splatCloud)
             } catch {
@@ -205,8 +239,16 @@ final class VisionCompositorRenderer: @unchecked Sendable {
 
         // --- Update phase: supply device anchor ---
         frame.startUpdate()
-        let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
-        drawable.deviceAnchor = deviceAnchor
+
+        // Use CACurrentMediaTime() for the anchor query.
+        // (timing.presentationTime is a Clock.Instant and not directly convertible to TimeInterval here)
+        if worldTracking.state == .running {
+            if let freshAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) {
+                lastDeviceAnchor = freshAnchor
+            }
+        }
+
+        drawable.deviceAnchor = lastDeviceAnchor
         frame.endUpdate()
 
         // --- Submission phase ---
@@ -218,109 +260,191 @@ final class VisionCompositorRenderer: @unchecked Sendable {
             return
         }
 
-        // If we have splat clouds, render the current frame's splats
+        // ------------------------------------------------------------------
+        // Prepare per-view textures.
+        //
+        // On the real device the compositor uses a `.layered` layout where
+        // both eyes share a single 2D-array texture.  The vertex shader does
+        // NOT output [[render_target_array_index]], so when we used to set
+        // renderTargetArrayLength = 2 and render once, ALL primitives went
+        // to layer 0 (left eye) only.  The compositor then rejected the
+        // frame because layer 1 was empty → permanent black screen.
+        //
+        // Fix: render each view in its OWN render pass that targets a 2D
+        // texture view of the correct array slice (layered) or the correct
+        // dedicated texture.
+        // ------------------------------------------------------------------
+
+        let viewCount = drawable.views.count
+        let isLayered = drawable.colorTextures[0].textureType == .type2DArray
+
+        // Build per-view color & depth texture references
+        var colorTexPerView: [MTLTexture] = []
+        var depthTexPerView: [MTLTexture?] = []
+
+        if isLayered {
+            let colorArray = drawable.colorTextures[0]
+            let depthArray = drawable.depthTextures.first
+            for i in 0..<viewCount {
+                if let cSlice = colorArray.makeTextureView(
+                    pixelFormat: colorArray.pixelFormat,
+                    textureType: .type2D,
+                    levels: 0..<1, slices: i..<(i + 1)
+                ) {
+                    colorTexPerView.append(cSlice)
+                }
+                if let dArr = depthArray,
+                   let dSlice = dArr.makeTextureView(
+                    pixelFormat: dArr.pixelFormat,
+                    textureType: .type2D,
+                    levels: 0..<1, slices: i..<(i + 1)
+                ) {
+                    depthTexPerView.append(dSlice)
+                } else {
+                    depthTexPerView.append(nil)
+                }
+            }
+        } else {
+            // Dedicated — one texture per view
+            for i in 0..<viewCount {
+                if i < drawable.colorTextures.count {
+                    colorTexPerView.append(drawable.colorTextures[i])
+                }
+                if i < drawable.depthTextures.count {
+                    depthTexPerView.append(drawable.depthTextures[i])
+                } else {
+                    depthTexPerView.append(nil)
+                }
+            }
+        }
+
+        // Fallback: if texture-view creation failed, use the raw textures
+        // with the old renderTargetArrayLength approach (at least one eye).
+        if colorTexPerView.isEmpty {
+            colorTexPerView.append(drawable.colorTextures[0])
+            depthTexPerView.append(drawable.depthTextures.first)
+        }
+
+        // ------------------------------------------------------------------
+        // Render
+        // ------------------------------------------------------------------
         if !splatClouds.isEmpty {
             let frameIdx = currentFrameIndex % splatClouds.count
             let splatCloud = splatClouds[frameIdx]
 
-            // Always build projection from compositor view tangents
-            let view = drawable.views[0]
-            let projectionMatrix = Self.computeProjectionFromTangents(view.tangents, nearZ: 0.01, farZ: 100.0)
-
-            // View matrix: from device anchor, or identity for simulator
-            let viewTransform: simd_float4x4
-            let cameraWorldPos: SIMD3<Float>
-
-            if let anchor = deviceAnchor {
-                let anchorTransform = anchor.originFromAnchorTransform
-                viewTransform = simd_inverse(anchorTransform)
-                cameraWorldPos = SIMD3<Float>(anchorTransform.columns.3.x,
-                                              anchorTransform.columns.3.y,
-                                              anchorTransform.columns.3.z)
-            } else {
-                // Before ARKit starts: identity (camera at origin, looking -Z)
-                // SplatCloud already positioned at (0,0,-2), so it's in view.
-                viewTransform = matrix_identity_float4x4
-                cameraWorldPos = SIMD3<Float>(0, 0, 0)
-            }
-
-            // Build viewport dimensions from first drawable view
-            let viewWidth = Float(view.textureMap.viewport.width)
-            let viewHeight = Float(view.textureMap.viewport.height)
-
             let modelMatrix = splatCloud.worldMatrix
 
-            let modelViewMatrix = simd_mul(viewTransform, modelMatrix)
+            // ---------- Render each view (eye) ----------
+            for viewIndex in 0..<min(viewCount, colorTexPerView.count) {
+                let view = drawable.views[viewIndex]
+                let projectionMatrix = Self.computeProjectionFromTangents(
+                    view.tangents, nearZ: 0.01, farZ: 100.0)
 
-            let tan_fovx = 1.0 / projectionMatrix[0][0]
-            let tan_fovy = 1.0 / projectionMatrix[1][1]
-            let focal_x = viewWidth / (2.0 * tan_fovx)
-            let focal_y = viewHeight / (2.0 * tan_fovy)
+                // -------- Per-eye view matrix --------
+                let viewTransform: simd_float4x4
+                let cameraWorldPos: SIMD3<Float>
 
-            let cameraPos = simd_float4(cameraWorldPos, 1.0)
-            let cameraPosOrig = simd_mul(simd_inverse(modelMatrix), cameraPos)
+                if let anchor = lastDeviceAnchor {
+                    let anchorTransform = anchor.originFromAnchorTransform
+                    // Multiply anchor transform by the eye's offset (view.transform)
+                    let eyeWorldTransform = simd_mul(anchorTransform, view.transform)
+                    viewTransform = simd_inverse(eyeWorldTransform)
+                    cameraWorldPos = SIMD3<Float>(eyeWorldTransform.columns.3.x,
+                                                  eyeWorldTransform.columns.3.y,
+                                                  eyeWorldTransform.columns.3.z)
+                } else {
+                    viewTransform = matrix_identity_float4x4
+                    cameraWorldPos = SIMD3<Float>(0, 0, 0)
+                }
 
-            let uni = Uniforms(
-                projection_matrix: projectionMatrix,
-                model_matrix: modelMatrix,
-                model_view_matrix: modelViewMatrix,
-                inv_model_view_matrix: simd_inverse(modelViewMatrix),
-                camera_pos: cameraPos,
-                camera_pos_orig: cameraPosOrig,
-                viewport_width: viewWidth,
-                viewport_height: viewHeight,
-                focal_x: focal_x,
-                focal_y: focal_y,
-                tan_fovx: tan_fovx,
-                tan_fovy: tan_fovy,
-                drag_alpha: 0.0,
-                time: Float(CACurrentMediaTime())
-            )
+                let modelViewMatrix = simd_mul(viewTransform, modelMatrix)
+                let cameraPos       = simd_float4(cameraWorldPos, 1.0)
+                let cameraPosOrig   = simd_mul(simd_inverse(modelMatrix), cameraPos)
 
-            splatCloud.updateUniforms(uniforms: uni)
+                let viewWidth  = Float(view.textureMap.viewport.width)
+                let viewHeight = Float(view.textureMap.viewport.height)
 
-            // Debug print first few frames
-            if debugFrameCounter < 3 {
-                debugFrameCounter += 1
-                print("[Compositor] Frame \(debugFrameCounter): anchor=\(deviceAnchor != nil), " +
-                      "viewport=\(viewWidth)x\(viewHeight), " +
-                      "focal=(\(focal_x),\(focal_y)), " +
-                      "tan_fov=(\(tan_fovx),\(tan_fovy)), " +
-                      "cameraPos=\(cameraWorldPos), " +
-                      "numSplats=\(splatCloud.numPoints), " +
-                      "tangents=\(view.tangents)")
+                let tan_fovx = 1.0 / projectionMatrix[0][0]
+                let tan_fovy = 1.0 / projectionMatrix[1][1]
+                let focal_x  = viewWidth  / (2.0 * tan_fovx)
+                let focal_y  = viewHeight / (2.0 * tan_fovy)
+
+                let uni = Uniforms(
+                    projection_matrix: projectionMatrix,
+                    model_matrix: modelMatrix,
+                    model_view_matrix: modelViewMatrix,
+                    inv_model_view_matrix: simd_inverse(modelViewMatrix),
+                    camera_pos: cameraPos,
+                    camera_pos_orig: cameraPosOrig,
+                    viewport_width: viewWidth,
+                    viewport_height: viewHeight,
+                    focal_x: focal_x,
+                    focal_y: focal_y,
+                    tan_fovx: tan_fovx,
+                    tan_fovy: tan_fovy,
+                    drag_alpha: 0.0,
+                    time: Float(CACurrentMediaTime())
+                )
+
+                splatCloud.updateUniforms(uniforms: uni)
+
+                // -------- diagnostic logging (first 3 actual frames) --------
+                if debugFrameCounter < 3 {
+                    let mcClip = simd_mul(projectionMatrix,
+                                         simd_mul(modelViewMatrix,
+                                                  simd_float4(0, 0, 0, 1)))
+                    let ndc = mcClip.w != 0
+                        ? SIMD3<Float>(mcClip.x / mcClip.w,
+                                       mcClip.y / mcClip.w,
+                                       mcClip.z / mcClip.w)
+                        : SIMD3<Float>(0, 0, 0)
+
+                    print("[Compositor] Frame \(debugFrameCounter+1) eye\(viewIndex): " +
+                          "anchor=\(lastDeviceAnchor != nil), " +
+                          "views=\(viewCount), layered=\(isLayered), " +
+                          "vp=\(viewWidth)x\(viewHeight), " +
+                          "focal=(\(focal_x),\(focal_y)), " +
+                          "tan_fov=(\(tan_fovx),\(tan_fovy)), " +
+                          "cam=\(cameraWorldPos), " +
+                          "modelPos=\(splatCloud.position), " +
+                          "NDC=\(ndc), " +
+                          "tangents=\(view.tangents), " +
+                          "numSplats=\(splatCloud.numPoints), " +
+                          "colTexType=\(drawable.colorTextures[0].textureType.rawValue), " +
+                          "depFmt=\(drawable.depthTextures.first?.pixelFormat.rawValue ?? 0)")
+                }
+
+                // -------- build per-view render pass --------
+                let rpd = MTLRenderPassDescriptor()
+                rpd.colorAttachments[0].texture    = colorTexPerView[viewIndex]
+                rpd.colorAttachments[0].loadAction  = .clear
+                rpd.colorAttachments[0].storeAction = .store
+                rpd.colorAttachments[0].clearColor  = MTLClearColorMake(0, 0, 0, 0)
+
+                if let dTex = depthTexPerView[viewIndex] {
+                    rpd.depthAttachment.texture    = dTex
+                    rpd.depthAttachment.loadAction  = .clear
+                    rpd.depthAttachment.storeAction = .store
+                    rpd.depthAttachment.clearDepth  = 1.0
+                }
+
+                rpd.renderTargetArrayLength = 0  // single 2D texture per pass
+
+                if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: rpd) {
+                    let vp = view.textureMap.viewport
+                    encoder.setViewport(MTLViewport(
+                        originX: vp.originX,
+                        originY: vp.originY,
+                        width:   vp.width,
+                        height:  vp.height,
+                        znear: 0.0, zfar: 1.0))
+
+                    splatCloud.render(renderEncoder: encoder)
+                    encoder.endEncoding()
+                }
             }
 
-            // Build render pass descriptor
-            let rpd = MTLRenderPassDescriptor()
-            rpd.colorAttachments[0].texture = drawable.colorTextures[0]
-            rpd.colorAttachments[0].loadAction = .clear
-            rpd.colorAttachments[0].storeAction = .store
-            rpd.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0)
-
-            if let depthTex = drawable.depthTextures.first {
-                rpd.depthAttachment.texture = depthTex
-                rpd.depthAttachment.loadAction = .clear
-                rpd.depthAttachment.storeAction = .store
-                rpd.depthAttachment.clearDepth = 1.0
-            }
-
-            rpd.renderTargetArrayLength = drawable.views.count
-
-            if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: rpd) {
-                let vp = view.textureMap.viewport
-                encoder.setViewport(MTLViewport(
-                    originX: vp.originX,
-                    originY: vp.originY,
-                    width: vp.width,
-                    height: vp.height,
-                    znear: 0.0, zfar: 1.0))
-
-                splatCloud.render(renderEncoder: encoder)
-                encoder.endEncoding()
-            }
-
-            // Advance animation if playing
+            // Advance animation once per composite frame (not per eye)
             if isPlaying {
                 progressCounter += 1
                 if progressCounter % stepInd == 0 {
@@ -328,17 +452,21 @@ final class VisionCompositorRenderer: @unchecked Sendable {
                 }
             }
 
-        } else {
-            // No splat data — clear to dark blue so user knows renderer is alive
-            let rpd = MTLRenderPassDescriptor()
-            rpd.colorAttachments[0].texture = drawable.colorTextures[0]
-            rpd.colorAttachments[0].loadAction = .clear
-            rpd.colorAttachments[0].storeAction = .store
-            rpd.colorAttachments[0].clearColor = MTLClearColorMake(0.05, 0.05, 0.25, 1.0)
-            rpd.renderTargetArrayLength = drawable.views.count
+            if debugFrameCounter < 3 { debugFrameCounter += 1 }
 
-            if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: rpd) {
-                encoder.endEncoding()
+        } else {
+            // No splat data — clear all views to dark blue
+            for viewIndex in 0..<colorTexPerView.count {
+                let rpd = MTLRenderPassDescriptor()
+                rpd.colorAttachments[0].texture    = colorTexPerView[viewIndex]
+                rpd.colorAttachments[0].loadAction  = .clear
+                rpd.colorAttachments[0].storeAction = .store
+                rpd.colorAttachments[0].clearColor  = MTLClearColorMake(0.05, 0.05, 0.25, 1.0)
+                rpd.renderTargetArrayLength = 0
+
+                if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: rpd) {
+                    encoder.endEncoding()
+                }
             }
         }
 
