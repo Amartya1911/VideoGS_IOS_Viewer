@@ -614,6 +614,8 @@ class FPSCounter: ObservableObject {
     private var lastTime: TimeInterval = 0
     private var frameCount = 0
     @Published var fps: Int = 0
+    private var latestFPS: Int = 0
+    private let lock = NSLock()
 
     private var displayLink: CADisplayLink?
 
@@ -632,10 +634,21 @@ class FPSCounter: ObservableObject {
         let elapsed = link.timestamp - lastTime
 
         if elapsed >= 1 {
-            fps = Int(Double(frameCount) / elapsed)
+            let newFPS = Int(Double(frameCount) / elapsed)
+            lock.lock()
+            latestFPS = newFPS
+            lock.unlock()
+            fps = newFPS
             frameCount = 0
             lastTime = link.timestamp
         }
+    }
+
+    func snapshotFPS() -> Int {
+        lock.lock()
+        let value = latestFPS
+        lock.unlock()
+        return value
     }
 
     deinit {

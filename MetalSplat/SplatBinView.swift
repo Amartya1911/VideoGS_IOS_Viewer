@@ -21,10 +21,13 @@ import SatinCore
 struct BinPerfSample {
     let frameIndex: Int         // which splat frame is showing
     let drawCallIndex: Int      // monotonic draw counter
+    let preDrawMs: Double       // draw() entry -> drawStart
     let cpuStageMs: Double      // drawStart -> drawEnd (all CPU work inside draw())
     let gpuQueueWaitMs: Double  // drawEnd -> gpuStartTime (CPU/GPU queue wait)
     let gpuAndCallbackMs: Double // gpuStartTime -> completion callback entry
     let endToEndMs: Double      // CPU start of draw() -> completion handler entry
+    let displayFPS: Int         // snapshot of on-screen CADisplayLink FPS counter
+    let fullFrameMs: Double     // draw() entry -> completion handler entry
 }
 
 /// Accumulates timing samples in memory, dumps to CSV on demand.
@@ -54,11 +57,14 @@ class BinPerfLogger {
         
         #if DEBUG
         if sampleCount % debugPrintInterval == 1 {
-            NSLog("[BinPerf] draw#%d  frame=%d  cpuStage=%.2fms  gpuQueueWait=%.2fms  gpuAndCallback=%.2fms  endToEnd=%.2fms",
+            NSLog("[BinPerf] draw#%d  frame=%d  preDraw=%.2fms  cpuStage=%.2fms  gpuQueueWait=%.2fms  gpuAndCallback=%.2fms  endToEnd=%.2fms  displayFPS=%d  fullFrame=%.2fms",
                   sample.drawCallIndex, sample.frameIndex,
+                sample.preDrawMs,
                   sample.cpuStageMs, sample.gpuQueueWaitMs,
                   sample.gpuAndCallbackMs,
-                  sample.endToEndMs)
+                  sample.endToEndMs,
+                  sample.displayFPS,
+                  sample.fullFrameMs)
         }
         #endif
     }
@@ -122,14 +128,17 @@ class BinPerfLogger {
         let fileURL = docs.appendingPathComponent(filename)
         
         var csv = "# BinPerfLog  frames=\(numFrames)  splats/frame=\(numSplatsPerFrame)  initLoadMs=\(String(format: "%.2f", initLoadMs))  initBuildMs=\(String(format: "%.2f", initSplatCloudBuildMs))\n"
-        csv += "draw_call,frame_index,cpu_stage_ms,gpu_queue_wait_ms,gpu_and_callback_ms,end_to_end_ms\n"
+        csv += "draw_call,frame_index,pre_draw_ms,cpu_stage_ms,gpu_queue_wait_ms,gpu_and_callback_ms,end_to_end_ms,display_fps,full_frame_ms\n"
         
         for s in snapshot {
-            csv += String(format: "%d,%d,%.3f,%.3f,%.3f,%.3f\n",
+            csv += String(format: "%d,%d,%.3f,%.3f,%.3f,%.3f,%.3f,%d,%.3f\n",
                           s.drawCallIndex, s.frameIndex,
+                          s.preDrawMs,
                           s.cpuStageMs, s.gpuQueueWaitMs,
                           s.gpuAndCallbackMs,
-                          s.endToEndMs)
+                          s.endToEndMs,
+                          s.displayFPS,
+                          s.fullFrameMs)
         }
         
         do {
@@ -243,6 +252,7 @@ class BinCameraControllerRenderer: Forge.Renderer {
     let stepInd: Int = 2  // draw calls per frame (same as video pipeline)
     
     let binConfig: BinDatasetConfig
+    weak var fpsCounter: FPSCounter?
     
     let perfLogger = BinPerfLogger()
     var drawCallCounter: Int = 0
@@ -251,10 +261,11 @@ class BinCameraControllerRenderer: Forge.Renderer {
         self.isPaused = isPaused
     }
     
-    init(model: SplatModelInfo, progress: RendererProgress, binConfig: BinDatasetConfig) {
+    init(model: SplatModelInfo, progress: RendererProgress, binConfig: BinDatasetConfig, fpsCounter: FPSCounter?) {
         self.model = model
         self.progress = progress
         self.binConfig = binConfig
+        self.fpsCounter = fpsCounter
         super.init()
     }
     
@@ -394,6 +405,7 @@ class BinCameraControllerRenderer: Forge.Renderer {
     }
     
     override func draw(_ view: MTKView, _ commandBuffer: MTLCommandBuffer) {
+        let frameStart = CACurrentMediaTime()
         guard let renderPassDescriptor = view.currentRenderPassDescriptor else { return }
         guard currentFrameNum > 0 else { return }
         
@@ -439,7 +451,10 @@ class BinCameraControllerRenderer: Forge.Renderer {
             guard let self else { return }
 
             let callbackEntry = CACurrentMediaTime()
+            let preDrawMs = (drawStart - frameStart) * 1000.0
             let endToEndMs = (callbackEntry - drawStart) * 1000.0
+            let displayFPS = self.fpsCounter?.snapshotFPS() ?? -1
+            let fullFrameMs = (callbackEntry - frameStart) * 1000.0
 
             var gpuQueueWaitMs = -1.0
             var gpuAndCallbackMs = -1.0
@@ -451,10 +466,13 @@ class BinCameraControllerRenderer: Forge.Renderer {
             let sample = BinPerfSample(
                 frameIndex: visibleFrame,
                 drawCallIndex: drawCallIndex,
+                preDrawMs: preDrawMs,
                 cpuStageMs: cpuStageMs,
                 gpuQueueWaitMs: gpuQueueWaitMs,
                 gpuAndCallbackMs: gpuAndCallbackMs,
-                endToEndMs: endToEndMs
+                endToEndMs: endToEndMs,
+                displayFPS: displayFPS,
+                fullFrameMs: fullFrameMs
             )
 
             self.perfLogger.recordCompleted(sample)
@@ -550,7 +568,7 @@ struct SplatBinView: View {
         .background(Color.white)
         .onAppear {
             if renderer == nil {
-                renderer = BinCameraControllerRenderer(model: model, progress: progress, binConfig: binConfig)
+                renderer = BinCameraControllerRenderer(model: model, progress: progress, binConfig: binConfig, fpsCounter: fpsCounter)
             }
         }
         .onDisappear {
